@@ -12,7 +12,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val connectButton = findViewById<Button>(R.id.connectButton)
+        val connectButton = findViewById<Button>(R.id.refreshButton)
         val connectStatusTextView = findViewById<TextView>(R.id.bluetoothStatus)
 
         connectButton.setOnClickListener{
@@ -24,5 +24,6 @@ class MainActivity : AppCompatActivity() {
                 connectStatusTextView.text = "Connected"
             }
         }
+
     }
 }
