@@ -38,16 +38,16 @@
             app:layout_constraintStart_toStartOf="parent"
             android:id="@+id/selectDeviceList"
             app:layout_constraintHorizontal_bias="0.518"
-            app:layout_constraintTop_toBottomOf="@+id/writeButton"/>
+            app:layout_constraintTop_toBottomOf="@+id/newMessageButton"/>
     <Button
             android:text="New Message"
-            android:paddingLeft="125dp"
-            android:paddingRight="125dp"
+            android:paddingLeft="100dp"
+            android:paddingRight="100dp"
             android:singleLine="true"
             android:drawableLeft="@drawable/ic_create_black_24dp"
             android:layout_width="0dp"
             android:layout_height="60dp"
-            android:id="@+id/writeButton" app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/newMessageButton" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintHorizontal_bias="0.0"/>
