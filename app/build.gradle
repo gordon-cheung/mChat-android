@@ -31,4 +31,14 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation "org.jetbrains.anko:anko-common:0.10.7"
+
+    //recyclerView
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
+
+    //glide
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+
+    //circleImageView
+    implementation 'de.hdodenhof:circleimageview:2.2.0'
 }
