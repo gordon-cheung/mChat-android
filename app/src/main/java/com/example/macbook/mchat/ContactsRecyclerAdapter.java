@@ -18,13 +18,11 @@ import java.util.ArrayList;
 public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecyclerAdapter.ViewHolder>{
 
     private static final String TAG = "ContactsRecyclerAdapter";
-    private ArrayList<String> mImageNames = new ArrayList<>();
-    private ArrayList<String> mImages = new ArrayList<>();
+    private ArrayList<Contact> mContacts;
     private Context mContext;
 
-    public ContactsRecyclerAdapter(Context context, ArrayList<String> imageNames, ArrayList<String> images) {
-        mImageNames = imageNames;
-        mImages = images;
+    public ContactsRecyclerAdapter(Context context, ArrayList<Contact> contacts) {
+        mContacts = contacts;
         mContext = context;
     }
 
@@ -38,20 +36,20 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called.");
-        Glide.with(mContext).asBitmap().load(mImages.get(position)).into(holder.image);
-        holder.imageName.setText(mImageNames.get(position));
+        Glide.with(mContext).asBitmap().load(mContacts.get(position).getImage()).into(holder.image);
+        holder.imageName.setText(mContacts.get(position).getName());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on: " + mImageNames.get(position));
-                Toast.makeText(mContext, mImageNames.get(position), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onClick: clicked on: " + mContacts.get(position).getName());
+                Toast.makeText(mContext, mContacts.get(position).getName(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mImageNames.size();
+        return mContacts.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
