@@ -46,7 +46,7 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
                 Toast.makeText(mContext, mContacts.get(position).getName(), Toast.LENGTH_SHORT).show();
               
                 Intent intent = new Intent(mContext, ChatActivity.class);
-                intent.putExtra("USER_DATA", mImageNames.get(position));
+                intent.putExtra("USER_DATA", mContacts.get(position).getName());
                 mContext.startActivity(intent);
             }
         });
