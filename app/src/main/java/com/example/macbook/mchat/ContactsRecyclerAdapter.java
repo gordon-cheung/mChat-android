@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import de.hdodenhof.circleimageview.CircleImageView;
+import android.content.Intent;
 
 import java.util.ArrayList;
 
@@ -43,6 +44,10 @@ public class ContactsRecyclerAdapter extends RecyclerView.Adapter<ContactsRecycl
             public void onClick(View view) {
                 Log.d(TAG, "onClick: clicked on: " + mContacts.get(position).getName());
                 Toast.makeText(mContext, mContacts.get(position).getName(), Toast.LENGTH_SHORT).show();
+              
+                Intent intent = new Intent(mContext, ChatActivity.class);
+                intent.putExtra("USER_DATA", mImageNames.get(position));
+                mContext.startActivity(intent);
             }
         });
     }
