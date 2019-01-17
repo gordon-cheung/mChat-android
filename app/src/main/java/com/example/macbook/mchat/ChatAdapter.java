@@ -19,11 +19,15 @@ public class ChatAdapter extends RecyclerView.Adapter {
         mUserName = user;
     }
 
+    public void AddMessage(Message message) {
+        mMessageList.add(message);
+    }
+
     @Override
     public int getItemViewType(int position) {
         Message message = mMessageList.get(position);
 
-        if (message.getUser() == mUserName) {
+        if (message.getUser() != mUserName) {
             return VIEW_TYPE_MESSAGE_SENT;
         }
         else {

@@ -11,7 +11,9 @@
             android:id="@+id/reyclerview_message_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="4dp">
+            app:layout_constraintBottom_toTopOf="@+id/layout_chatbox"
+            android:padding="4dp"
+            android:layout_marginBottom="48dp">
     </android.support.v7.widget.RecyclerView>
 
     <!-- A horizontal line between the chatbox and RecyclerView -->
