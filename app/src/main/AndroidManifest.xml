@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
 
     <uses-feature
             android:name="android.hardware.bluetooth_le"
@@ -28,6 +31,9 @@
         <activity android:name=".SelectContactActivity"/>
         <activity android:name=".ChatActivity">
         </activity>
+        <activity android:name=".SelectDeviceActivity">
+        </activity>
+        <service android:name=".BluetoothService" android:enabled="true"></service>
     </application>
 
 </manifest>

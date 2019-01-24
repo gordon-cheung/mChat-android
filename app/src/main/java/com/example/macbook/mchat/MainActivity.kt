@@ -20,6 +20,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        val connectBluetoothButton = findViewById<Button>(R.id.refreshButton)
+
+        connectBluetoothButton.setOnClickListener{
+            val intent = Intent (this, SelectDeviceActivity::class.java)
+            startActivity(intent)
+        }
+
         getPermissions()
     }
 
