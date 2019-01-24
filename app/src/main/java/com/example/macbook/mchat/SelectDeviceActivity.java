@@ -26,8 +26,9 @@ public class SelectDeviceActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothScanner;
-    private BluetoothService mBluetoothService;
+        private BluetoothService mBluetoothService;
 
+    // Manage service lifecycle
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -38,7 +39,8 @@ public class SelectDeviceActivity extends AppCompatActivity {
                 finish();
             }
             // Automatically connects to the device upon successful start-up initialization.
-            //mBluetoothService.connect(mDeviceAddress);
+            String mDeviceAddress = "FD:93:67:7D:3E:1B";
+            mBluetoothService.connect(mDeviceAddress);
         }
 
         @Override
