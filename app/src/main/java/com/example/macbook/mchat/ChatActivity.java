@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.EditText;
 import java.util.ArrayList;
 
+// TODO Cleanup Chat activity
 public class ChatActivity extends AppCompatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;

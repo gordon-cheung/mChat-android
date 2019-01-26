@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.UUID;
 
+// TODO refactor and clean up class
 public class BluetoothService extends Service {
     private final static String TAG = BluetoothService.class.getSimpleName();
     private final static String NORDIC_UART_GATT_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";

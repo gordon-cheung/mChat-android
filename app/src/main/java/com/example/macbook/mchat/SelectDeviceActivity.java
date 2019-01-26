@@ -20,6 +20,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO Add Scan Button and Clean up Activity
 public class SelectDeviceActivity extends AppCompatActivity {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
     private ArrayList<BluetoothDevice> mDevices = new ArrayList<BluetoothDevice>();
