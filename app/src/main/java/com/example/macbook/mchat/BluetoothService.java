@@ -15,6 +15,11 @@ import java.util.UUID;
 
 public class BluetoothService extends Service {
     private final static String TAG = BluetoothService.class.getSimpleName();
+    private final static String NORDIC_UART_GATT_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    private final static String NORDIC_UART_GATT_CHARACTERISTIC_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    private final static String NORDIC_UART_GATT_CHARACTERISTIC_RX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+    private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
 
     public class LocalBinder extends Binder {
         BluetoothService getService() {
@@ -57,6 +62,7 @@ public class BluetoothService extends Service {
                 Log.i(TAG, "Attempting to start service discovery:" + mBluetoothGatt.discoverServices());
 
                 mBluetoothGatt.discoverServices();
+                mConnectionState = STATE_CONNECTED;
 //                BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic();
 //
 //                try {
@@ -69,6 +75,7 @@ public class BluetoothService extends Service {
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server.");
+                mConnectionState = STATE_DISCONNECTED;
             }
         }
 
@@ -79,36 +86,6 @@ public class BluetoothService extends Service {
                 Log.i(TAG, "Services are discovered");
                 displayGattServices(getSupportedGattServices());
             }
-        }
-
-        public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
-                                                  boolean enabled) {
-            if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-                Log.w(TAG, "BluetoothAdapter not initialized");
-                return;
-            }
-            Log.d(TAG, "gatt.SetCharacteristicNotification " + characteristic.getUuid().toString());
-            boolean success1 = mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
-            Log.d(TAG, "Set Characteristic Notification: " + (success1 ? "success" : "fail"));
-
-            // This is specific to Heart Rate Measurement.
-            if ("6e400003-b5a3-f393-e0a9-e50e24dcca9e".equals(characteristic.getUuid().toString())) {
-                Log.d(TAG, "Setting up descriptor");
-                Log.d(TAG, "Enabling Notifications for " + characteristic.getUuid().toString());
-                BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-
-                if (descriptor == null) {
-                    Log.d(TAG, "Descriptor not found");
-                }
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                //descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                Log.d(TAG, "gattWriteDescriptor " + descriptor.getUuid().toString());
-                boolean success = mBluetoothGatt.writeDescriptor(descriptor);
-                Log.d(TAG, "Write Descriptor: " + (success ? "success" : "fail"));
-                Log.d(TAG, "Data written to descriptor: " + descriptor.getUuid().toString() + "value: " + BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE.toString());
-            }
-
-            Log.d(TAG, "Notification enabled");
         }
 
         @Override
@@ -124,51 +101,114 @@ public class BluetoothService extends Service {
             byte[] byteValue = characteristic.getValue();
             String value = new String(byteValue);
             Log.d(TAG, "value: " + value);
+            broadcast(characteristic);
         }
+    };
 
-        public List<BluetoothGattService> getSupportedGattServices() {
-            if (mBluetoothGatt == null) return null;
-
-            return mBluetoothGatt.getServices();
+    public void broadcast(final BluetoothGattCharacteristic characteristic) {
+        Log.d("TAG", "Attempting to broadcast with charctierstic: " + characteristic.getUuid().toString());
+        if (characteristic.getUuid().toString().equals(NORDIC_UART_GATT_CHARACTERISTIC_RX_UUID)) {
+            final Intent intent = new Intent("MESSAGE_RECEIVED");
+            byte[] byteValue = characteristic.getValue();
+            String value = new String(byteValue);
+            intent.putExtra("RECEIVED_MESSAGE", value);
+            Log.d(TAG, "Broadcasting intent");
+            sendBroadcast(intent);
         }
+    }
 
-        private void displayGattServices(List<BluetoothGattService> gattServices) {
-            Log.d(TAG, "Displaying Gatt Services");
+    public List<BluetoothGattService> getSupportedGattServices() {
+        if (mBluetoothGatt == null) return null;
 
-            for (BluetoothGattService gattService : gattServices) {
-                Log.d(TAG, "Gatt Service UUID: " + gattService.getUuid().toString());
+        return mBluetoothGatt.getServices();
+    }
+
+    private void displayGattServices(List<BluetoothGattService> gattServices) {
+        Log.d(TAG, "Displaying Gatt Services");
+
+        for (BluetoothGattService gattService : gattServices) {
+            Log.d(TAG, "Gatt Service UUID: " + gattService.getUuid().toString());
 //
-                List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
+            List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
 
-                for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-                    Log.d(TAG, "Gatt Characteristic UUID: " + gattCharacteristic.getUuid().toString());
+            for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+                Log.d(TAG, "Gatt Characteristic UUID: " + gattCharacteristic.getUuid().toString());
 
-                    List<BluetoothGattDescriptor> gattDescriptors = gattCharacteristic.getDescriptors();
-                    for (BluetoothGattDescriptor gattDescriptor : gattDescriptors) {
-                        Log.d(TAG, "Gatt Descriptor UUID: " + gattDescriptor.getUuid().toString());
-                    }
-                    // THIS WORKS OMG
-                    try {
-                        String data = "Connection established";
-                        // Need to wait for requests see see
-                        // https://stackoverflow.com/questions/47097298/android-ble-bluetoothgatt-writedescriptor-return-sometimes-false
-                        //6e400001-b5a3-f393-e0a9-e50e24dcca9e UART UUID service
+                List<BluetoothGattDescriptor> gattDescriptors = gattCharacteristic.getDescriptors();
+                for (BluetoothGattDescriptor gattDescriptor : gattDescriptors) {
+                    Log.d(TAG, "Gatt Descriptor UUID: " + gattDescriptor.getUuid().toString());
+                }
+                // THIS WORKS OMG
+                try {
+                    String data = "Connection established";
+                    // Need to wait for requests see see
+                    // https://stackoverflow.com/questions/47097298/android-ble-bluetoothgatt-writedescriptor-return-sometimes-false
+                    //6e400001-b5a3-f393-e0a9-e50e24dcca9e UART UUID service
 //                        if (gattCharacteristic.getUuid().toString().equals("6e400002-b5a3-f393-e0a9-e50e24dcca9e")) {
 //                            gattCharacteristic.setValue(URLEncoder.encode(data, "utf-8"));
 //                            Log.d(TAG, "WriteCharcteristic(" + gattCharacteristic.getUuid() + ") Value: " + data);
 //                            mBluetoothGatt.writeCharacteristic(gattCharacteristic);
 //                        }
-                        if (gattCharacteristic.getUuid().toString().equals("6e400003-b5a3-f393-e0a9-e50e24dcca9e")) {
-                            setCharacteristicNotification(gattCharacteristic, true);
-                        }
-                    } catch(Exception ex) {
-
+                    if (gattCharacteristic.getUuid().toString().equals("6e400002-b5a3-f393-e0a9-e50e24dcca9e")) {
+                        nordicUARTGattCharacteristicTX = gattCharacteristic;
                     }
+                    if (gattCharacteristic.getUuid().toString().equals("6e400003-b5a3-f393-e0a9-e50e24dcca9e")) {
+                        setCharacteristicNotification(gattCharacteristic, true);
+                    }
+                } catch(Exception ex) {
+
                 }
             }
         }
-    };
-//
+    }
+
+    public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
+                                              boolean enabled) {
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return;
+        }
+        Log.d(TAG, "gatt.SetCharacteristicNotification " + characteristic.getUuid().toString());
+        boolean success1 = mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
+        Log.d(TAG, "Set Characteristic Notification: " + (success1 ? "success" : "fail"));
+
+        // This is specific to Heart Rate Measurement.
+        if ("6e400003-b5a3-f393-e0a9-e50e24dcca9e".equals(characteristic.getUuid().toString())) {
+            Log.d(TAG, "Setting up descriptor");
+            Log.d(TAG, "Enabling Notifications for " + characteristic.getUuid().toString());
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+
+            if (descriptor == null) {
+                Log.d(TAG, "Descriptor not found");
+            }
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            //descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+            Log.d(TAG, "gattWriteDescriptor " + descriptor.getUuid().toString());
+            boolean success = mBluetoothGatt.writeDescriptor(descriptor);
+            Log.d(TAG, "Write Descriptor: " + (success ? "success" : "fail"));
+            Log.d(TAG, "Data written to descriptor: " + descriptor.getUuid().toString() + "value: " + BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE.toString());
+        }
+
+        Log.d(TAG, "Notification enabled");
+    }
+
+    public boolean writeCharcteristic(String data) {
+        boolean success = false;
+        try {
+            nordicUARTGattCharacteristicTX.setValue(URLEncoder.encode(data, "utf-8"));
+            Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
+            success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
+
+            if (!success) {
+                Log.d(TAG, "WriteCharacteristic failed");
+            }
+        } catch (Exception ex) {
+
+        }
+
+        return success;
+    }
+
 //    // Initialize bluetooth
     public boolean initialize() {
         Log.d(TAG, "Initialize Bluetooth Service");
@@ -221,5 +261,21 @@ public class BluetoothService extends Service {
 
     public String getConnectedDeviceAddress() {
         return mDeviceAddress;
+    }
+
+    private int mConnectionState = STATE_DISCONNECTED;
+
+    private static final int STATE_DISCONNECTED = 0;
+    private static final int STATE_CONNECTING = 1;
+    private static final int STATE_CONNECTED = 2;
+
+    public int getConnectionState() {
+        Log.d(TAG, "Connection state is " + mConnectionState);
+        return mConnectionState;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 }

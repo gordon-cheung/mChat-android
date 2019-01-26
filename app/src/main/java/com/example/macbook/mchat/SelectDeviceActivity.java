@@ -45,7 +45,7 @@ public class SelectDeviceActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
+            mBluetoothService = null;
         }
     };
 
@@ -81,6 +81,9 @@ public class SelectDeviceActivity extends AppCompatActivity {
 //        mAdapter = new DevicesRecyclerAdapter(this, mDevices);
 //        mRecyclerView.setAdapter(mAdapter);
 //        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        Intent intent = new Intent(this, BluetoothService.class);
+        startService(intent);
 
         Intent gattServiceIntent = new Intent(this, BluetoothService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
