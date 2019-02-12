@@ -1,10 +1,11 @@
 package com.example.macbook.mchat
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.TextView
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -12,17 +13,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val connectButton = findViewById<Button>(R.id.connectButton)
-        val connectStatusTextView = findViewById<TextView>(R.id.bluetoothStatus)
+        val newMessageButton = findViewById<Button>(R.id.newMessageButton)
 
-        connectButton.setOnClickListener{
-            val rand = Random().nextInt(10)
-            if (rand < 5){
-                connectStatusTextView.text = "Disconnected"
-            }
-            else {
-                connectStatusTextView.text = "Connected"
-            }
+        newMessageButton.setOnClickListener{
+            val intent = Intent(this, SelectContactActivity::class.java)
+            startActivity(intent)
+        }
+
+        val connectBluetoothButton = findViewById<Button>(R.id.refreshButton)
+
+        connectBluetoothButton.setOnClickListener{
+            val intent = Intent (this, SelectDeviceActivity::class.java)
+            startActivity(intent)
+        }
+
+        getPermissions()
+    }
+
+    private fun getPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 1)
         }
     }
 }
