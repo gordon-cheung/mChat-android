@@ -1,6 +1,7 @@
 package com.example.macbook.mchat;
 
 import android.content.*;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,13 +12,15 @@ import android.widget.Button;
 import android.view.View;
 import android.widget.EditText;
 import java.util.ArrayList;
+import java.util.List;
 
 // TODO Cleanup Chat activity
 public class ChatActivity extends AppCompatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
-    private String userData;
+    private String receiverId;
+    private AppDatabase mAppDatabase;
 
     private BluetoothService mBluetoothService;
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -40,16 +43,20 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        userData = getIntent().getExtras().getString("USER_DATA");
-        getSupportActionBar().setTitle(userData);
+        mAppDatabase = AppDatabase.getInstance(this);
+
+        receiverId = getIntent().getExtras().getString("USER_DATA");
+        getSupportActionBar().setTitle(receiverId);
 
         ArrayList<Message> messageList =  new ArrayList<Message>();
 
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
-        mAdapter = new ChatAdapter(messageList, userData);
+        mAdapter = new ChatAdapter(messageList, "Gordon");
 
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        new GetMessagesTask().execute();
 
         final Button button = findViewById(R.id.button_chatbox_send);
         button.setOnClickListener(new View.OnClickListener() {
@@ -57,10 +64,11 @@ public class ChatActivity extends AppCompatActivity {
                 final EditText editText = findViewById(R.id.edittext_chatbox);
                 String message = editText.getText().toString();
 
-                SendMessage(new Message(message, "Gordon"));
+                // TODO replace with current app user id
+                SendMessage(new Message(message, "Gordon", receiverId));
 
                 if (message.equals("something")) {
-                    ReceiveMessage(new Message("I am here", userData));
+                    ReceiveMessage(new Message("I am here", receiverId, "Gordon"));
                 }
             }
         });
@@ -69,7 +77,7 @@ public class ChatActivity extends AppCompatActivity {
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
-    private boolean SendMessage(Message msg) {
+    private boolean SendMessage(final Message msg) {
         int currentSize = mAdapter.getItemCount();
 
         mAdapter.AddMessage(msg);
@@ -79,11 +87,19 @@ public class ChatActivity extends AppCompatActivity {
 
         mBluetoothService.writeCharcteristic(msg.getMessageBody());
 
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Inserting stored sent message");
+                mAppDatabase.messageDao().insert(msg);
+            }
+        });
+
         return true;
     }
 
-    private boolean ReceiveMessage(Message msg) {
-        Log.d(TAG, "Message received: " + msg.getMessageBody() + " for user: " + msg.getUser());
+    private boolean ReceiveMessage(final Message msg) {
+        Log.d(TAG, "Message received: " + msg.getMessageBody() + " from user: " + msg.getReceiverId());
         int currentSize = mAdapter.getItemCount();
 
         mAdapter.AddMessage(msg);
@@ -91,17 +107,25 @@ public class ChatActivity extends AppCompatActivity {
 
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Inserting stored received message");
+                mAppDatabase.messageDao().insert(msg);
+            }
+        });
+
         return true;
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Broadcast received");
-            final String action = intent.getAction();
-            if (action == "MESSAGE_RECEIVED") {
-                ReceiveMessage(new Message(intent.getStringExtra("RECEIVED_MESSAGE"), userData));
-            }
+        Log.d(TAG, "Broadcast received");
+        final String action = intent.getAction();
+        if (action == "MESSAGE_RECEIVED") {
+            ReceiveMessage(new Message(intent.getStringExtra("RECEIVED_MESSAGE"), receiverId, "Gordon"));
+        }
         }
     };
 
@@ -125,5 +149,27 @@ public class ChatActivity extends AppCompatActivity {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("MESSAGE_RECEIVED");
         return intentFilter;
+    }
+
+    private class GetMessagesTask extends AsyncTask<Void, Void, List<Message>> {
+
+        @Override
+        protected List<Message> doInBackground(Void... voids) {
+            List<Message> listOfStoredMsgs = mAppDatabase.messageDao().getAll(receiverId);
+            return listOfStoredMsgs;
+        }
+
+        @Override
+        protected void onPostExecute(List<Message> messages) {
+            for (Message msg: messages) {
+                Log.d(TAG, String.format("SenderId %s, ReceiverId %s, MessageBody %s", msg.getSenderId(), msg.getReceiverId(), msg.getMessageBody()));
+                int currentSize = mAdapter.getItemCount();
+
+                mAdapter.AddMessage(msg);
+                mAdapter.notifyItemInserted(currentSize);
+
+                mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
+            }
+        }
     }
 }

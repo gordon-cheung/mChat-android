@@ -2,6 +2,7 @@ package com.example.macbook.mchat;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -9,14 +10,15 @@ import java.util.ArrayList;
 import android.view.LayoutInflater;
 
 public class ChatAdapter extends RecyclerView.Adapter {
+    private String TAG = ChatActivity.class.getSimpleName();
     public static final int VIEW_TYPE_MESSAGE_SENT = 1;
     public static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
     private ArrayList<Message> mMessageList;
-    private String mUserName;
+    private String mAppUserId;
 
     public ChatAdapter(ArrayList<Message> messageList, String user) {
         mMessageList = messageList;
-        mUserName = user;
+        mAppUserId = user;
     }
 
     public void AddMessage(Message message) {
@@ -27,7 +29,11 @@ public class ChatAdapter extends RecyclerView.Adapter {
     public int getItemViewType(int position) {
         Message message = mMessageList.get(position);
 
-        if (message.getUser() != mUserName) {
+        Log.d(TAG, String.format("SenderId %s, ReceiverId %s, AppUserId %s", message.getSenderId(), message.getReceiverId(), mAppUserId));
+        Log.d(TAG, message.getSenderId().equals(mAppUserId) ? "Match" : "Not match");
+
+        // TODO use current app user instead
+        if (message.getSenderId().equals(mAppUserId)) {
             return VIEW_TYPE_MESSAGE_SENT;
         }
         else {
