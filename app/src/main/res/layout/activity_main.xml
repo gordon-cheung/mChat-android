@@ -1,54 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity"
+        android:orientation="vertical">
+    <!--<Button-->
+    <!--android:text="Refresh"-->
+    <!--android:layout_width="0dp"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:id="@+id/refreshButton" android:layout_marginBottom="32dp"-->
+    <!--app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"-->
+    <!--android:layout_marginStart="96dp" app:layout_constraintEnd_toEndOf="parent"-->
+    <!--android:layout_marginEnd="96dp"/>-->
+    <!--<TextView-->
+    <!--android:text="Disconnected"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:id="@+id/textView" app:layout_constraintStart_toStartOf="parent"-->
+    <!--android:layout_marginStart="24dp" android:layout_marginBottom="8dp"-->
+    <!--app:layout_constraintBottom_toTopOf="@+id/refreshButton" app:layout_constraintEnd_toEndOf="parent"-->
+    <!--android:layout_marginEnd="24dp"/>-->
+    <!--<View-->
+    <!--android:id="@+id/divider"-->
+    <!--android:layout_width="368dp"-->
+    <!--android:layout_height="1dp"-->
+    <!--android:background="?android:attr/listDivider"-->
+    <!--tools:layout_editor_absoluteX="22dp" app:layout_constraintBottom_toTopOf="@+id/textView"-->
+    <!--/>-->
+    <!--<ListView-->
+    <!--android:layout_width="0dp"-->
+    <!--android:layout_height="0dp"-->
+    <!--android:layout_marginBottom="8dp"-->
+    <!--app:layout_constraintBottom_toBottomOf="@+id/divider" app:layout_constraintEnd_toEndOf="parent"-->
+    <!--app:layout_constraintStart_toStartOf="parent"-->
+    <!--android:id="@+id/selectDeviceList"-->
+    <!--app:layout_constraintHorizontal_bias="0.518"-->
+    <!--app:layout_constraintTop_toBottomOf="@+id/newMessageButton"/>-->
     <Button
-            android:text="Refresh"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/refreshButton" android:layout_marginBottom="32dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="96dp" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="96dp"/>
-    <TextView
-            android:text="Disconnected"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/textView" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="24dp" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/refreshButton" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="24dp"/>
-    <View
-            android:id="@+id/divider"
-            android:layout_width="368dp"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider"
-            tools:layout_editor_absoluteX="22dp" app:layout_constraintBottom_toTopOf="@+id/textView"
-    />
-    <ListView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/divider" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/selectDeviceList"
-            app:layout_constraintHorizontal_bias="0.518"
-            app:layout_constraintTop_toBottomOf="@+id/newMessageButton"/>
-    <Button
-            android:text="New Message"
+            android:id="@+id/newMessageButton"
             android:paddingLeft="100dp"
             android:paddingRight="100dp"
             android:singleLine="true"
             android:drawableLeft="@drawable/ic_create_black_24dp"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:id="@+id/newMessageButton" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"/>
-</android.support.constraint.ConstraintLayout>
+            android:text="New Message"
+            android:layout_width="match_parent"
+            android:layout_height="102dp"
+            android:layout_weight="1"/>
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerview_conversation_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+</LinearLayout>

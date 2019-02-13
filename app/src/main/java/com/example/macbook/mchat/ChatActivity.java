@@ -19,7 +19,7 @@ public class ChatActivity extends AppCompatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
-    private String receiverId;
+    private String contactId;
     private AppDatabase mAppDatabase;
 
     private BluetoothService mBluetoothService;
@@ -45,8 +45,8 @@ public class ChatActivity extends AppCompatActivity {
 
         mAppDatabase = AppDatabase.getInstance(this);
 
-        receiverId = getIntent().getExtras().getString("USER_DATA");
-        getSupportActionBar().setTitle(receiverId);
+        contactId = getIntent().getExtras().getString("USER_DATA");
+        getSupportActionBar().setTitle(contactId);
 
         ArrayList<Message> messageList =  new ArrayList<Message>();
 
@@ -65,10 +65,10 @@ public class ChatActivity extends AppCompatActivity {
                 String message = editText.getText().toString();
 
                 // TODO replace with current app user id
-                SendMessage(new Message(message, "Gordon", receiverId));
+                SendMessage(new Message(message, contactId, Message.MESSAGE_SENT));
 
                 if (message.equals("something")) {
-                    ReceiveMessage(new Message("I am here", receiverId, "Gordon"));
+                    ReceiveMessage(new Message("I am here", contactId, Message.MESSAGE_RECEIVED));
                 }
             }
         });
@@ -99,7 +99,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private boolean ReceiveMessage(final Message msg) {
-        Log.d(TAG, "Message received: " + msg.getMessageBody() + " from user: " + msg.getReceiverId());
+        Log.d(TAG, "Message received: " + msg.getMessageBody() + " from user: " + msg.getContactId());
         int currentSize = mAdapter.getItemCount();
 
         mAdapter.AddMessage(msg);
@@ -124,7 +124,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "Broadcast received");
         final String action = intent.getAction();
         if (action == "MESSAGE_RECEIVED") {
-            ReceiveMessage(new Message(intent.getStringExtra("RECEIVED_MESSAGE"), receiverId, "Gordon"));
+            ReceiveMessage(new Message(intent.getStringExtra("RECEIVED_MESSAGE"), contactId, Message.MESSAGE_RECEIVED));
         }
         }
     };
@@ -151,18 +151,17 @@ public class ChatActivity extends AppCompatActivity {
         return intentFilter;
     }
 
-    private class GetMessagesTask extends AsyncTask<Void, Void, List<Message>> {
-
+    private class GetMessagesTask extends AsyncTask<Void, Void, List<Message>>
+    {
         @Override
         protected List<Message> doInBackground(Void... voids) {
-            List<Message> listOfStoredMsgs = mAppDatabase.messageDao().getAll(receiverId);
-            return listOfStoredMsgs;
+            return mAppDatabase.messageDao().getAll(contactId);
         }
 
         @Override
         protected void onPostExecute(List<Message> messages) {
             for (Message msg: messages) {
-                Log.d(TAG, String.format("SenderId %s, ReceiverId %s, MessageBody %s", msg.getSenderId(), msg.getReceiverId(), msg.getMessageBody()));
+                Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.getContactId(), msg.getMessageBody()));
                 int currentSize = mAdapter.getItemCount();
 
                 mAdapter.AddMessage(msg);
