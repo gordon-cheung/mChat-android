@@ -47,11 +47,18 @@
             android:drawableLeft="@drawable/ic_create_black_24dp"
             android:text="New Message"
             android:layout_width="match_parent"
-            android:layout_height="102dp"
+            android:layout_height="140dp"
             android:layout_weight="1"/>
     <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerview_conversation_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_weight="1">
+    </android.support.v7.widget.RecyclerView>
+    <Button
+            android:id="@+id/bluetoothButton"
+            android:text="Bluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
             android:layout_weight="1"/>
 </LinearLayout>

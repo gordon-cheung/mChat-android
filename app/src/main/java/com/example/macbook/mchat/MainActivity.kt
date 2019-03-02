@@ -19,6 +19,8 @@ class MainActivity : AppCompatActivity() {
     private var mAdapter: ConversationRecyclerAdapter? = null
     private var mAppDatabase: AppDatabase? = null
 
+    // TODO on naviagted to pull from database (not just onCreate)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -42,12 +44,12 @@ class MainActivity : AppCompatActivity() {
 
         GetConversationTask().execute()
 
-//        val connectBluetoothButton = findViewById<Button>(R.id.refreshButton)
-//
-//        connectBluetoothButton.setOnClickListener{
-//            val intent = Intent (this, SelectDeviceActivity::class.java)
-//            startActivity(intent)
-//        }
+        val connectBluetoothButton = findViewById<Button>(R.id.bluetoothButton)
+
+        connectBluetoothButton.setOnClickListener{
+            val intent = Intent (this, SelectDeviceActivity::class.java)
+            startActivity(intent)
+        }
 
         getPermissions()
     }

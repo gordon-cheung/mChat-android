@@ -266,6 +266,7 @@ public class BluetoothService extends Service {
 
     private int mConnectionState = STATE_DISCONNECTED;
 
+    // TODO update connection states
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;

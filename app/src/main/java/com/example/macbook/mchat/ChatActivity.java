@@ -67,8 +67,9 @@ public class ChatActivity extends AppCompatActivity {
                 // TODO replace with current app user id
                 SendMessage(new Message(message, contactId, Message.MESSAGE_SENT));
 
-                if (message.equals("something")) {
-                    ReceiveMessage(new Message("I am here", contactId, Message.MESSAGE_RECEIVED));
+                // TODO remove this code
+                if (message.equals("Hello")) {
+                    ReceiveMessage(new Message("How are you?", contactId, Message.MESSAGE_RECEIVED));
                 }
             }
         });

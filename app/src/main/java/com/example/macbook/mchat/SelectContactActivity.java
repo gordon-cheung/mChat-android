@@ -17,6 +17,9 @@ public class SelectContactActivity extends AppCompatActivity {
     private static final String TAG = "SelectContactActivity";
     private ArrayList<Contact> mContacts = new ArrayList<>();
 
+    // TODO implement a better way to do this such as LINQ?
+    private ArrayList<String> mPhoneNumbers = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +37,10 @@ public class SelectContactActivity extends AppCompatActivity {
             String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
             number = Contact.formatPhoneNumber(number);
             Log.d(TAG, "name: " + name + " number: " + number);
-            mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+            if (!mPhoneNumbers.contains(number)) {
+                mPhoneNumbers.add(number);
+                mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+            }
         }
     }
 
