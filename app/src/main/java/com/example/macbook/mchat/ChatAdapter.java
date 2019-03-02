@@ -11,8 +11,6 @@ import android.view.LayoutInflater;
 
 public class ChatAdapter extends RecyclerView.Adapter {
     private String TAG = ChatActivity.class.getSimpleName();
-    public static final int VIEW_TYPE_MESSAGE_SENT = 1;
-    public static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
     private ArrayList<Message> mMessageList;
     private String mAppUserId;
 
@@ -29,27 +27,15 @@ public class ChatAdapter extends RecyclerView.Adapter {
     public int getItemViewType(int position) {
         Message message = mMessageList.get(position);
 
-        Log.d(TAG, String.format("SenderId %s, ReceiverId %s, AppUserId %s", message.getSenderId(), message.getReceiverId(), mAppUserId));
-        Log.d(TAG, message.getSenderId().equals(mAppUserId) ? "Match" : "Not match");
-
-        // TODO use current app user instead
-        if (message.getSenderId().equals(mAppUserId)) {
-            return VIEW_TYPE_MESSAGE_SENT;
-        }
-        else {
-            return VIEW_TYPE_MESSAGE_RECEIVED;
-        }
+        Log.d(TAG, String.format("ContactId %s, AppUserId %s", message.getContactId(), mAppUserId));
+        return message.getMessageType();
     }
 
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_received_listitem, parent, false);
-//        ReceivedMessageViewHolder holder = new ReceivedMessageViewHolder(view);
-//        return holder;
-
-        if (viewType == VIEW_TYPE_MESSAGE_SENT) {
+        if (viewType == Message.MESSAGE_SENT) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_sent_listitem, parent, false);
             SentMessageViewHolder holder = new SentMessageViewHolder(view);
             return holder;
@@ -65,7 +51,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
         Message currentMessage = mMessageList.get(position);
 //       ((ReceivedMessageViewHolder) holder).bind(currentMessage);
 
-        if (holder.getItemViewType() == VIEW_TYPE_MESSAGE_SENT) {
+        if (holder.getItemViewType() == Message.MESSAGE_SENT) {
             ((SentMessageViewHolder) holder).bind(currentMessage);
         }
         else {

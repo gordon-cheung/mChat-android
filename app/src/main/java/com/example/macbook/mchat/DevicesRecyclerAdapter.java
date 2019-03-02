@@ -55,6 +55,17 @@ public class DevicesRecyclerAdapter extends RecyclerView.Adapter {
                 Log.d(TAG, "onClick: clicked on: " + deviceName);
                 Log.d(TAG, "onClick: clicked on: " + deviceAddress);
 
+                final Intent intent = new Intent("DEVICE_SELECTED");
+                intent.putExtra("DEVICE_SELECTED", deviceAddress);
+                Log.d(TAG, "Broadcasting bluetooth device selected");
+                mContext.sendBroadcast(intent);
+
+//                Intent intent = new Intent(mContext, BluetoothService.class);
+//                mContext.startService(intent);
+//
+//                Intent gattServiceIntent = new Intent(mContext, BluetoothService.class);
+//                mContext.bindService(gattServiceIntent, mContext.mServiceConnection, BIND_AUTO_CREATE);
+
 //                BluetoothService btService = new BluetoothService(mContext);
 //                btService.initialize();
 //                btService.connect(deviceAddress);
@@ -79,7 +90,7 @@ public class DevicesRecyclerAdapter extends RecyclerView.Adapter {
             super(itemView);
             mDeviceName = itemView.findViewById(R.id.device_name);
             mDeviceAddress = itemView.findViewById(R.id.device_address);
-            parentLayout =itemView.findViewById(R.id.parent_layout);
+            parentLayout = itemView.findViewById(R.id.parent_layout);
         }
 
         public void bind(BluetoothDevice device) {
