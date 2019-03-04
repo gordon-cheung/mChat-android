@@ -1,7 +1,10 @@
 package com.example.macbook.mchat
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.AsyncTask
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
@@ -19,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private var mAdapter: ConversationRecyclerAdapter? = null
     private var mAppDatabase: AppDatabase? = null
 
-    // TODO on naviagted to pull from database (not just onCreate)
+    // TODO: on navigated to pull from database (not just onCreate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +55,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         getPermissions()
+    }
+
+    // TODO: TEST THIS
+    private val messageUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.d(TAG, "Broadcast received")
+            val action = intent.action
+            if (action === AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
+                val msg = intent.getSerializableExtra("RECEIVED_MESSAGE") as Message
+                mAdapter?.updateConversations(msg)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(messageUpdateReceiver, mainActivityIntentFilter())
+        //        if (mBluetoothLeService != null) {
+        //            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
+        //            Log.d(TAG, "Connect request result=" + result);
+        //        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(messageUpdateReceiver)
+    }
+
+    private fun mainActivityIntentFilter(): IntentFilter {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("MESSAGE_RECEIVED")
+        return intentFilter
     }
 
     override fun onStart() {
