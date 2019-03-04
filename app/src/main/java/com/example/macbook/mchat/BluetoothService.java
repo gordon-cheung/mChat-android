@@ -205,8 +205,8 @@ public class BluetoothService extends Service {
         });
 
         // TODO create static broadcast ids
-        final Intent intent = new Intent("MESSAGE_RECEIVED");
-        intent.putExtra("RECEIVED_MESSAGE", message);
+        final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+        intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
         Log.d(TAG, "Broadcasting intent: " + "MESSAGE_RECEIVED");
         sendBroadcast(intent);
     }

@@ -33,6 +33,8 @@ public class Message implements Serializable {
     @ColumnInfo(name = "timestamp")
     private long timestamp;
 
+    // TODO add read and unread column
+
     public Message() {}
 
     // Obsolete
@@ -59,7 +61,6 @@ public class Message implements Serializable {
         dataType = dType;
         timestamp = time;
     }
-
 
     public int getId() {
         return id;

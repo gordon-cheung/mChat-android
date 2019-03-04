@@ -34,7 +34,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         int position = 0;
         boolean isFound = false;
         for (position = 0; position < mConversations.size(); position ++) {
-            if (mConversations.get(position).getContactId() ==  message.getContactId()) {
+            if (mConversations.get(position).getContactId().equals(message.getContactId())) {
                 mConversations.remove(position);
                 isFound = true;
             }
@@ -46,6 +46,11 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
 
         mConversations.add(0, message);
         notifyItemInserted(0);
+    }
+
+    public void clearConversations() {
+        mConversations.clear();
+        notifyDataSetChanged();
     }
 
     @NonNull

@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.ArrayList
@@ -54,6 +55,21 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // TODO: Remove
+        val testButton = findViewById<Button>(R.id.testButton)
+        testButton.setOnClickListener(View.OnClickListener {
+            Log.d(TAG, "TEST BUTTON CLICKED")
+            val broadcastTestIntent = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
+            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis())
+            broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message)
+            sendBroadcast(broadcastTestIntent)
+
+            val broadcastTestIntent2 = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
+            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis())
+            broadcastTestIntent2.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message2)
+            sendBroadcast(broadcastTestIntent2)
+        })
+
         getPermissions()
     }
 
@@ -63,7 +79,8 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "Broadcast received")
             val action = intent.action
             if (action === AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
-                val msg = intent.getSerializableExtra("RECEIVED_MESSAGE") as Message
+                Log.d(TAG, "Message received")
+                val msg = intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION) as Message
                 mAdapter?.updateConversations(msg)
             }
         }
@@ -72,6 +89,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         registerReceiver(messageUpdateReceiver, mainActivityIntentFilter())
+        GetConversationTask().execute();
         //        if (mBluetoothLeService != null) {
         //            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
         //            Log.d(TAG, "Connect request result=" + result);
@@ -85,12 +103,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun mainActivityIntentFilter(): IntentFilter {
         val intentFilter = IntentFilter()
-        intentFilter.addAction("MESSAGE_RECEIVED")
-        return intentFilter
-    }
-
-    override fun onStart() {
-        super.onStart()
+        intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
+        return intentFilter;
     }
 
     private inner class GetConversationTask: AsyncTask<Void, Void, List<Message>>()
@@ -100,6 +114,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onPostExecute(messages: List<Message>) {
+            mAdapter!!.clearConversations();
             for (msg in messages) {
                 Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.contactId, msg.messageBody))
                 val currentSize = mAdapter!!.getItemCount()
