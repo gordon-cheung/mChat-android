@@ -4,12 +4,16 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @Entity(tableName = "messages")
-public class Message {
+public class Message implements Serializable {
     public static final int MESSAGE_SENT = 1;
     public static final int MESSAGE_RECEIVED = 2;
+
+    public static final int TEXT = 1;
+    public static final int PICTURE = 2;
 
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -20,25 +24,42 @@ public class Message {
     @ColumnInfo(name = "message_type")
     private int messageType;
 
-//    @ColumnInfo(name = "sender_id")
-//    private String senderId;
-//
-//    @ColumnInfo(name = "receiver_id")
-//    private String receiverId;
+    @ColumnInfo(name = "data_type")
+    private int dataType;
 
     @ColumnInfo(name = "message_body")
     private String messageBody;
 
     @ColumnInfo(name = "timestamp")
-    private Date timestamp;
+    private long timestamp;
+
+    // TODO add read and unread column
 
     public Message() {}
 
-    public Message(String body, String contact, final int type) {
+    // Obsolete
+    public Message(String body, String contact, final int msgType) {
         messageBody = body;
         contactId = contact;
-        messageType = type;
-        timestamp = new Date();
+        messageType = msgType;
+        dataType = 0; //
+        timestamp = System.currentTimeMillis();
+    }
+
+    public Message(String body, String contact, final int msgType, final int dType) {
+        messageBody = body;
+        contactId = contact;
+        messageType = msgType;
+        dataType = dType;
+        timestamp = System.currentTimeMillis();
+    }
+
+    public Message(String body, String contact, final int msgType, final int dType, final long time) {
+        messageBody = body;
+        contactId = contact;
+        messageType = msgType;
+        dataType = dType;
+        timestamp = time;
     }
 
     public int getId() {
@@ -57,7 +78,9 @@ public class Message {
 
     public int getMessageType() { return messageType; }
 
-    public Date getTimestamp() { return timestamp; }
+    public long getTimestamp() { return timestamp; }
+
+    public int getDataType() { return dataType; }
 
     public void setId(int id) {
         this.id = id;
@@ -73,19 +96,20 @@ public class Message {
         this.messageType = type;
     }
 
-    public void setTimestamp(Date date) {
-        this.timestamp = date;
+    public void setTimestamp(long time) {
+        this.timestamp = time;
     }
 
+    public void setDataType(int type) {
+        this.dataType = type;
+    }
 
+    public void printMessage() {
+        System.out.println("ContactId: " + contactId);
+        System.out.println("MessageType: " + messageType);
+        System.out.println("DataType: " + dataType);
+        System.out.println("MessageBody: " + messageBody);
+        System.out.println("Timestamp: " + timestamp);
+    }
 
-
-
-//    public void setReceiverId(String id) {
-//        this.receiverId = id;
-//    }
-//
-//    public void setSenderId(String id) {
-//        this.senderId = id;
-//    }
 }

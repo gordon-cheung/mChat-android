@@ -30,6 +30,29 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         mConversations.add(message);
     }
 
+    public void updateConversations(Message message) {
+        int position = 0;
+        boolean isFound = false;
+        for (position = 0; position < mConversations.size(); position ++) {
+            if (mConversations.get(position).getContactId().equals(message.getContactId())) {
+                mConversations.remove(position);
+                isFound = true;
+            }
+        }
+
+        if (isFound) {
+            notifyItemRemoved(position);
+        }
+
+        mConversations.add(0, message);
+        notifyItemInserted(0);
+    }
+
+    public void clearConversations() {
+        mConversations.clear();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

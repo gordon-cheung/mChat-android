@@ -4,6 +4,7 @@ import android.app.Service;
 import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -99,9 +100,7 @@ public class BluetoothService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             Log.d(TAG, "Notification received from " + characteristic.getUuid().toString());
-            byte[] byteValue = characteristic.getValue();
-            String value = new String(byteValue);
-            Log.d(TAG, "value: " + value);
+            Log.d(TAG, "value: " + new String(characteristic.getValue()));
             broadcast(characteristic);
         }
     };
@@ -109,12 +108,8 @@ public class BluetoothService extends Service {
     public void broadcast(final BluetoothGattCharacteristic characteristic) {
         Log.d("TAG", "Attempting to broadcast with charctierstic: " + characteristic.getUuid().toString());
         if (characteristic.getUuid().toString().equals(NORDIC_UART_GATT_CHARACTERISTIC_RX_UUID)) {
-            final Intent intent = new Intent("MESSAGE_RECEIVED");
-            byte[] byteValue = characteristic.getValue();
-            String value = new String(byteValue);
-            intent.putExtra("RECEIVED_MESSAGE", value);
-            Log.d(TAG, "Broadcasting intent");
-            sendBroadcast(intent);
+            Log.d(TAG, "Handling received message notification");
+            receive(characteristic.getValue());
         }
     }
 
@@ -193,10 +188,50 @@ public class BluetoothService extends Service {
         Log.d(TAG, "Notification enabled");
     }
 
-    public boolean writeCharcteristic(String data) {
+    public boolean send(Message message) {
+        Packet packet = new Packet(message);
+        return writeCharacteristic(packet.getBytes());
+    }
+
+    public void receive(byte[] data) {
+        Packet packet = new Packet(data);
+        final Message message = packet.getMessage();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Inserting stored received message");
+                AppDatabase.getInstance().messageDao().insert(message);
+            }
+        });
+
+        // TODO create static broadcast ids
+        final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+        intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
+        Log.d(TAG, "Broadcasting intent: " + "MESSAGE_RECEIVED");
+        sendBroadcast(intent);
+    }
+
+    public boolean writeCharacteristic(String data) {
         boolean success = false;
         try {
             nordicUARTGattCharacteristicTX.setValue(URLEncoder.encode(data, "utf-8"));
+            Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
+            success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
+
+            if (!success) {
+                Log.d(TAG, "WriteCharacteristic failed");
+            }
+        } catch (Exception ex) {
+
+        }
+
+        return success;
+    }
+
+    public boolean writeCharacteristic(byte[] data) {
+        boolean success = false;
+        try {
+            nordicUARTGattCharacteristicTX.setValue(data);
             Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
             success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
 

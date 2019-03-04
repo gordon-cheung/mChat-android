@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.app.Notification;
 import android.content.*;
 import android.os.AsyncTask;
 import android.os.IBinder;
@@ -74,6 +75,18 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        // TODO: Remove
+        final Button testButton = findViewById(R.id.button_chatbox_test);
+        testButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d(TAG, "TEST BUTTON CLICKED");
+                Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                Message message = new Message("TESTING 123", contactId, Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis());
+                broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
+                sendBroadcast(broadcastTestIntent);
+            }
+        });
+
         Intent gattServiceIntent = new Intent(this, BluetoothService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
@@ -81,20 +94,28 @@ public class ChatActivity extends AppCompatActivity {
     private boolean SendMessage(final Message msg) {
         int currentSize = mAdapter.getItemCount();
 
+        // Update UI
         mAdapter.AddMessage(msg);
         mAdapter.notifyItemInserted(currentSize);
-
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
-        mBluetoothService.writeCharcteristic(msg.getMessageBody());
-
+        // Store message in database
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "Inserting stored sent message");
-                mAppDatabase.messageDao().insert(msg);
+            Log.d(TAG, "Inserting stored sent message");
+            mAppDatabase.messageDao().insert(msg);
             }
         });
+
+        // Async run method
+        try {
+            boolean success = mBluetoothService.send(msg);
+            // update or insert success message and u pdate UI
+        } catch(Exception ex) {
+            // update or insert failed message and update UI
+        }
+        //mBluetoothService.writeCharcteristic(msg.getMessageBody());
 
         return true;
     }
@@ -108,32 +129,38 @@ public class ChatActivity extends AppCompatActivity {
 
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Inserting stored received message");
-                mAppDatabase.messageDao().insert(msg);
-            }
-        });
+//        AsyncTask.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.d(TAG, "Inserting stored received message");
+//                mAppDatabase.messageDao().insert(msg);
+//            }
+//        });
 
         return true;
     }
 
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    // TODO: TEST THIS
+    private final BroadcastReceiver messageUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Broadcast received");
-        final String action = intent.getAction();
-        if (action == "MESSAGE_RECEIVED") {
-            ReceiveMessage(new Message(intent.getStringExtra("RECEIVED_MESSAGE"), contactId, Message.MESSAGE_RECEIVED));
-        }
+            Log.d(TAG, "Broadcast received");
+            final String action = intent.getAction();
+            if (action == AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
+                Log.d(TAG, "Message Received");
+                Message msg = (Message)intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                msg.printMessage();
+                if (msg.getContactId().equals(contactId)) {
+                    ReceiveMessage(msg);
+                }
+            }
         }
     };
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        registerReceiver(messageUpdateReceiver, chatActivityIntentFilter());
 //        if (mBluetoothLeService != null) {
 //            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
 //            Log.d(TAG, "Connect request result=" + result);
@@ -143,12 +170,12 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
+        unregisterReceiver(messageUpdateReceiver);
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter() {
+    private static IntentFilter chatActivityIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("MESSAGE_RECEIVED");
+        intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
         return intentFilter;
     }
 
