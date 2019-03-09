@@ -60,12 +60,12 @@ class MainActivity : AppCompatActivity() {
         testButton.setOnClickListener(View.OnClickListener {
             Log.d(TAG, "TEST BUTTON CLICKED")
             val broadcastTestIntent = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis())
+            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
             broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message)
             sendBroadcast(broadcastTestIntent)
 
             val broadcastTestIntent2 = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis())
+            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
             broadcastTestIntent2.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message2)
             sendBroadcast(broadcastTestIntent2)
         })
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         override fun onPostExecute(messages: List<Message>) {
             mAdapter!!.clearConversations();
             for (msg in messages) {
-                Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.contactId, msg.messageBody))
+                Log.d(TAG, String.format("ContactId %s, Body %s", msg.contactId, msg.body))
                 val currentSize = mAdapter!!.getItemCount()
 
                 mAdapter!!.addConversation(msg)

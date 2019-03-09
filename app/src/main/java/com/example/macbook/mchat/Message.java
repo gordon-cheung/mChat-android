@@ -9,9 +9,16 @@ import java.util.Date;
 
 @Entity(tableName = "messages")
 public class Message implements Serializable {
-    public static final int MESSAGE_SENT = 1;
-    public static final int MESSAGE_RECEIVED = 2;
+    // TYPE
+    public static final int IS_SEND = 1;
+    public static final int IS_RECEIVE = 2;
 
+    // STATUS
+    public static final int STATUS_PENDING = 0;
+    public static final int STATUS_SENT = 1;
+    public static final int STATUS_RECEIVED = 2;
+
+    // DATA_TYPE
     public static final int TEXT = 1;
     public static final int PICTURE = 2;
 
@@ -21,14 +28,17 @@ public class Message implements Serializable {
     @ColumnInfo(name = "contact_id")
     private String contactId;
 
-    @ColumnInfo(name = "message_type")
-    private int messageType;
+    @ColumnInfo(name = "type")
+    private int type;
 
     @ColumnInfo(name = "data_type")
     private int dataType;
 
-    @ColumnInfo(name = "message_body")
-    private String messageBody;
+    @ColumnInfo(name = "status")
+    private int status;
+
+    @ColumnInfo(name = "body")
+    private String body;
 
     @ColumnInfo(name = "timestamp")
     private long timestamp;
@@ -38,49 +48,50 @@ public class Message implements Serializable {
     public Message() {}
 
     // Obsolete
-    public Message(String body, String contact, final int msgType) {
-        messageBody = body;
+    public Message(String msgBody, String contact, final int msgType) {
+        body = msgBody;
         contactId = contact;
-        messageType = msgType;
+        type = msgType;
         dataType = 0; //
         timestamp = System.currentTimeMillis();
+        status = STATUS_PENDING;
     }
 
-    public Message(String body, String contact, final int msgType, final int dType) {
-        messageBody = body;
+    public Message(String msgBody, String contact, final int msgType, final int dType) {
+        body = msgBody;
         contactId = contact;
-        messageType = msgType;
+        type = msgType;
         dataType = dType;
         timestamp = System.currentTimeMillis();
+        status = STATUS_PENDING;
     }
 
-    public Message(String body, String contact, final int msgType, final int dType, final long time) {
-        messageBody = body;
+    public Message(String msgBody, String contact, final int msgType, final int dType, final long time) {
+        body = msgBody;
         contactId = contact;
-        messageType = msgType;
+        type = msgType;
         dataType = dType;
         timestamp = time;
+        status = STATUS_PENDING;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getMessageBody() {
-        return messageBody;
+    public String getBody() {
+        return body;
     }
-
-//    public String getReceiverId() { return receiverId; }
-//
-//    public String getSenderId() { return senderId; }
 
     public String getContactId() { return contactId; }
 
-    public int getMessageType() { return messageType; }
+    public int getType() { return type; }
 
     public long getTimestamp() { return timestamp; }
 
     public int getDataType() { return dataType; }
+
+    public int getStatus() { return status; }
 
     public void setId(int id) {
         this.id = id;
@@ -88,13 +99,11 @@ public class Message implements Serializable {
 
     public void setContactId(String id) { this.contactId = id; }
 
-    public void setMessageBody(String msg) {
-        this.messageBody = msg;
+    public void setBody(String msg) {
+        this.body = msg;
     }
 
-    public void setMessageType(int type) {
-        this.messageType = type;
-    }
+    public void setType(int type) { this.type = type; }
 
     public void setTimestamp(long time) {
         this.timestamp = time;
@@ -104,11 +113,13 @@ public class Message implements Serializable {
         this.dataType = type;
     }
 
+    public void setStatus(int status) { this.status = status; }
+
     public void printMessage() {
         System.out.println("ContactId: " + contactId);
-        System.out.println("MessageType: " + messageType);
+        System.out.println("Type: " + type);
         System.out.println("DataType: " + dataType);
-        System.out.println("MessageBody: " + messageBody);
+        System.out.println("Body: " + body);
         System.out.println("Timestamp: " + timestamp);
     }
 
