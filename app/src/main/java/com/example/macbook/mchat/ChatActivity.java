@@ -66,7 +66,7 @@ public class ChatActivity extends AppCompatActivity {
                 String message = editText.getText().toString();
 
                 // TODO replace with current app user id
-                SendMessage(new Message(message, contactId, Message.IS_SEND));
+                SendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
 
                 // TODO remove this code
                 if (message.equals("Hello")) {

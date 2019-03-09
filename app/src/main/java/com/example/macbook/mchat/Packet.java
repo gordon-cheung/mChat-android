@@ -24,10 +24,10 @@ public class Packet {
         this.timestamp = new byte[] {pkt[13], pkt[14], pkt[15], pkt[16]};
 
         int headerLength = 17;
-        int packetLength = (int)length;
+        int packetLength = headerLength + (int)this.length;
 
         ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
-        for (int i = headerLength; i <= packetLength; i++) {
+        for (int i = headerLength; i < packetLength; i++) {
             contentStream.write(pkt[i]);
         }
         this.content = contentStream.toByteArray();
@@ -47,10 +47,10 @@ public class Packet {
         // TODO  change Timestamp in  message class to use System.currentTimeMillis, store as long
         int dateInSec = (int) (msg.getTimestamp() / 1000);
 
-        this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();;
+        this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();
         this.content = msg.getBody().getBytes();
 
-        this.length = (byte)(address.length + 1 + 1 + 1 + timestamp.length + content.length);
+        this.length = (byte)(content.length);
 
         // Get Epoch Time
         int dateInSec2 = ByteBuffer.wrap(this.timestamp).getInt();

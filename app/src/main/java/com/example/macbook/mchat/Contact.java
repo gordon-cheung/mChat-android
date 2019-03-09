@@ -1,13 +1,23 @@
 package com.example.macbook.mchat;
 
-public class Contact {
+import android.util.Log;
+
+import java.io.Serializable;
+
+public class Contact implements Serializable {
+    private String TAG = Contact.class.getSimpleName();
     private String name;
     private String phoneNumber;
     private String image;
 
     public Contact(String name, String phoneNumber, String image) {
         this.name = name;
-        this.phoneNumber = phoneNumber;
+        String formattedNumber = phoneNumber.replaceAll("[^\\d.]", "");
+        if (formattedNumber.length() > 10) {
+            Log.d(TAG, "Phone number is too long: " + formattedNumber);
+            formattedNumber = formattedNumber.substring(formattedNumber.length() - 10);
+        }
+        this.phoneNumber = formattedNumber;
         this.image = image;
     }
 
