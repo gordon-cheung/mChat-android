@@ -19,29 +19,23 @@ public class PacketTest {
         int currentTime = (int) (System.currentTimeMillis() / 1000);
         String phoneNumber = "5555555555";
 
-        byte[] init = new byte[] {(byte)0xA0, (byte)0xA1};
         byte[] address = phoneNumber.getBytes();
         byte[] dataType = new byte[] {0x01};
         byte[] msgId = new byte[] {0x01};
         byte[] timestampByte = ByteBuffer.allocate(4).putInt(currentTime).array();
         byte[] contentByte = content.getBytes();
-        byte[] checksum = new byte[] {(byte)0xFF, (byte)0xFF};
-        byte[] sig = new byte[] {(byte)0xB0, (byte)0xB1};
 
-        int size = init.length + address.length + dataType.length + msgId.length + timestampByte.length + contentByte.length + checksum.length + sig.length;
+        int size = address.length + dataType.length + msgId.length + timestampByte.length + contentByte.length;
         byte[] sizeByte = new byte[] {(byte)size};
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
-            outputStream.write(init);
             outputStream.write(sizeByte);
             outputStream.write(address);
             outputStream.write(dataType);
             outputStream.write(msgId);
             outputStream.write(timestampByte);
             outputStream.write(contentByte);
-            outputStream.write(checksum);
-            outputStream.write(sig);
         } catch(Exception ex) {
 
         }

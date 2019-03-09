@@ -69,7 +69,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         // TODO use appdata user id
         String contactName = msg.getContactId();
         holder.contactName.setText(contactName);
-        holder.conversationMessage.setText(msg.getMessageBody());
+        holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

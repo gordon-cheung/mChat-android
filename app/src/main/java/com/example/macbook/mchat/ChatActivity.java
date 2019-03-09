@@ -66,11 +66,11 @@ public class ChatActivity extends AppCompatActivity {
                 String message = editText.getText().toString();
 
                 // TODO replace with current app user id
-                SendMessage(new Message(message, contactId, Message.MESSAGE_SENT));
+                SendMessage(new Message(message, contactId, Message.IS_SEND));
 
                 // TODO remove this code
                 if (message.equals("Hello")) {
-                    ReceiveMessage(new Message("How are you?", contactId, Message.MESSAGE_RECEIVED));
+                    ReceiveMessage(new Message("How are you?", contactId, Message.IS_RECEIVE));
                 }
             }
         });
@@ -81,7 +81,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
                 Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                Message message = new Message("TESTING 123", contactId, Message.MESSAGE_RECEIVED, Message.TEXT, System.currentTimeMillis());
+                Message message = new Message("TESTING 123", contactId, Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis());
                 broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
                 sendBroadcast(broadcastTestIntent);
             }
@@ -95,7 +95,7 @@ public class ChatActivity extends AppCompatActivity {
         int currentSize = mAdapter.getItemCount();
 
         // Update UI
-        mAdapter.AddMessage(msg);
+        mAdapter.addMessage(msg);
         mAdapter.notifyItemInserted(currentSize);
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
@@ -108,7 +108,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        // Async run method
+        // TODO Async run method
         try {
             boolean success = mBluetoothService.send(msg);
             // update or insert success message and u pdate UI
@@ -121,10 +121,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private boolean ReceiveMessage(final Message msg) {
-        Log.d(TAG, "Message received: " + msg.getMessageBody() + " from user: " + msg.getContactId());
+        Log.d(TAG, "Message received: " + msg.getBody() + " from user: " + msg.getContactId());
         int currentSize = mAdapter.getItemCount();
 
-        mAdapter.AddMessage(msg);
+        mAdapter.addMessage(msg);
         mAdapter.notifyItemInserted(currentSize);
 
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
@@ -189,10 +189,10 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<Message> messages) {
             for (Message msg: messages) {
-                Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.getContactId(), msg.getMessageBody()));
+                Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.getContactId(), msg.getBody()));
                 int currentSize = mAdapter.getItemCount();
 
-                mAdapter.AddMessage(msg);
+                mAdapter.addMessage(msg);
                 mAdapter.notifyItemInserted(currentSize);
 
                 mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);

@@ -19,7 +19,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
         mAppUserId = user;
     }
 
-    public void AddMessage(Message message) {
+    public void addMessage(Message message) {
         mMessageList.add(message);
     }
 
@@ -28,14 +28,14 @@ public class ChatAdapter extends RecyclerView.Adapter {
         Message message = mMessageList.get(position);
 
         Log.d(TAG, String.format("ContactId %s, AppUserId %s", message.getContactId(), mAppUserId));
-        return message.getMessageType();
+        return message.getType();
     }
 
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == Message.MESSAGE_SENT) {
+        if (viewType == Message.IS_SEND) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_sent_listitem, parent, false);
             SentMessageViewHolder holder = new SentMessageViewHolder(view);
             return holder;
@@ -51,7 +51,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
         Message currentMessage = mMessageList.get(position);
 //       ((ReceivedMessageViewHolder) holder).bind(currentMessage);
 
-        if (holder.getItemViewType() == Message.MESSAGE_SENT) {
+        if (holder.getItemViewType() == Message.IS_SEND) {
             ((SentMessageViewHolder) holder).bind(currentMessage);
         }
         else {
@@ -73,7 +73,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
         }
 
         void bind(Message message) {
-            mMessageBody.setText(message.getMessageBody());
+            mMessageBody.setText(message.getBody());
         }
     }
 
@@ -86,7 +86,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
         }
 
         void bind(Message message) {
-            mMessageBody.setText(message.getMessageBody());
+            mMessageBody.setText(message.getBody());
         }
     }
 }
