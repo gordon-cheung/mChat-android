@@ -14,9 +14,14 @@ public abstract class MChatActivity extends AppCompatActivity {
     private final BroadcastReceiver appNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Broadcast received");
             final String action = intent.getAction();
-            Toast.makeText(context, "Received " + action, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Broadcast received: " + action);
+            if (action == AppNotification.ACTION_GATT_CONNECTED) {
+                Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
+            }
+            else if (action == AppNotification.ACTION_GATT_DISCONNECTED) {
+                Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
+            }
             onAppNotificationReceived(intent);
         }
     };
