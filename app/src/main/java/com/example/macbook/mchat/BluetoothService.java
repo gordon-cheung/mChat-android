@@ -65,16 +65,8 @@ public class BluetoothService extends Service {
 
                 mBluetoothGatt.discoverServices();
                 mConnectionState = STATE_CONNECTED;
-//                BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic();
-//
-//                try {
-//                    String data = "Connection established";
-//                    characteristic.setValue(URLEncoder.encode(data, "utf-8"));
-//                    mBluetoothGatt.writeCharacteristic(characteristic);
-//                } catch(Exception ex) {
-//
-//                }
 
+                // TODO Send Network registration on connection? or when services are discovered
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server.");
                 mConnectionState = STATE_DISCONNECTED;
@@ -87,6 +79,8 @@ public class BluetoothService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(TAG, "Services are discovered");
                 displayGattServices(getSupportedGattServices());
+
+                // TODO once bluetooth services are discoverd or when it is able to send, send network registration packets
             }
         }
 
@@ -103,10 +97,23 @@ public class BluetoothService extends Service {
             Log.d(TAG, "value: " + new String(characteristic.getValue()));
             broadcast(characteristic);
         }
+
+        @Override
+        public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            Log.d("TAG", "Descriptor write finished");
+            startNetworkRegistration();
+        }
     };
 
+    public void startNetworkRegistration() {
+        Log.d(TAG, "Sending network registration packet");
+        Message networkRegMsg = new Message("5551234567", Message.INIT);
+        //TODO Read ACK and show it isconnece doto the base
+        send(networkRegMsg);
+    }
+
     public void broadcast(final BluetoothGattCharacteristic characteristic) {
-        Log.d("TAG", "Attempting to broadcast with charctierstic: " + characteristic.getUuid().toString());
+        Log.d("TAG", "Attempting to broadcast with characteristic: " + characteristic.getUuid().toString());
         if (characteristic.getUuid().toString().equals(NORDIC_UART_GATT_CHARACTERISTIC_RX_UUID)) {
             Log.d(TAG, "Handling received message notification");
             receive(characteristic.getValue());
@@ -160,6 +167,7 @@ public class BluetoothService extends Service {
 
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enabled) {
+        Log.d(TAG, "Setting Characteristic Notification");
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
@@ -190,32 +198,46 @@ public class BluetoothService extends Service {
 
     public boolean send(Message message) {
         Packet packet = new Packet(message);
+        Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
         return writeCharacteristic(packet.getBytes());
     }
 
     public void receive(byte[] data) {
+        Log.d(TAG, "RECEIVED RAW BYTES: " + ByteUtilities.getByteArrayInHexString(data));
         Packet packet = new Packet(data);
-        final Message message = packet.getMessage();
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Inserting stored received message");
-                AppDatabase.getInstance().messageDao().insert(message);
-            }
-        });
+
+        Log.d(TAG, "Encoded RAW BYTES to PACKET");
+        packet.printPacket();
+
+//        Message msg = packet.getMessage();
+//        if (msg.getDataType() == Message.STATE_IN_PROGRESS) {
+//            // Broadcast Notification
+//            Toast.makeText(mContext, mContacts.get(position).getName(), Toast.LENGTH_SHORT).show();
+//        }
+
+        //final Message message = packet.getMessage();
+
+        // TODO need to handle ACKs not just messages
+//        AsyncTask.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.d(TAG, "Inserting stored received message");
+//                AppDatabase.getInstance().messageDao().insert(message);
+//            }
+//        });
 
         // TODO create static broadcast ids
-        final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-        intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
-        Log.d(TAG, "Broadcasting intent: " + "MESSAGE_RECEIVED");
-        sendBroadcast(intent);
+//        final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+//        intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
+//        Log.d(TAG, "Broadcasting intent: " + "MESSAGE_RECEIVED");
+//        sendBroadcast(intent);
     }
 
     public boolean writeCharacteristic(String data) {
         boolean success = false;
         try {
             nordicUARTGattCharacteristicTX.setValue(URLEncoder.encode(data, "utf-8"));
-            Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
+            Log.d(TAG, "WriteCharacteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
             success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
 
             if (!success) {

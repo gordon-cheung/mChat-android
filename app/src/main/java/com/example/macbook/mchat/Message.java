@@ -33,6 +33,7 @@ public class Message implements Serializable {
     public static final int INIT = 0;
     public static final int TEXT = 1;
     public static final int PICTURE = 2;
+    public static final int STATE_IN_PROGRESS = 5;
 
     @PrimaryKey(autoGenerate = true)
     private int id;
