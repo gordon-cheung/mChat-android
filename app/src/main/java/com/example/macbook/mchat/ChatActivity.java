@@ -1,10 +1,8 @@
 package com.example.macbook.mchat;
 
-import android.app.Notification;
 import android.content.*;
 import android.os.AsyncTask;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // TODO Cleanup Chat activity
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends MChatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
@@ -46,7 +44,7 @@ public class ChatActivity extends AppCompatActivity {
 
         mAppDatabase = AppDatabase.getInstance(this);
 
-        contactId = getIntent().getExtras().getString("USER_DATA");
+        contactId = getIntent().getExtras().getString(AppNotification.CONTACT_DATA);
         getSupportActionBar().setTitle(contactId);
 
         ArrayList<Message> messageList =  new ArrayList<Message>();
@@ -80,11 +78,15 @@ public class ChatActivity extends AppCompatActivity {
         testButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
-                mBluetoothService.startNetworkRegistration();
-//                Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-//                Message message = new Message("TESTING 123", contactId, Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis());
-//                broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
-//                sendBroadcast(broadcastTestIntent);
+
+                // Enable this to test startNetworkRegistration
+                //mBluetoothService.startNetworkRegistration();
+
+                // Enable this to test broadcast notification
+                Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                Message message = new Message("TESTING 123", contactId, Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis());
+                broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
+                sendBroadcast(broadcastTestIntent);
             }
         });
 
@@ -141,43 +143,17 @@ public class ChatActivity extends AppCompatActivity {
         return true;
     }
 
-    // TODO: TEST THIS
-    private final BroadcastReceiver messageUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Broadcast received");
-            final String action = intent.getAction();
-            if (action == AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
-                Log.d(TAG, "Message Received");
-                Message msg = (Message)intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                msg.printMessage();
-                if (msg.getContactId().equals(contactId)) {
-                    ReceiveMessage(msg);
-                }
+    @Override
+    public void onAppNotificationReceived(Intent intent) {
+        final String action = intent.getAction();
+        if (action == AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
+            Log.d(TAG, "Message Received");
+            Message msg = (Message)intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+            msg.printMessage();
+            if (msg.getContactId().equals(contactId)) {
+                ReceiveMessage(msg);
             }
         }
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(messageUpdateReceiver, chatActivityIntentFilter());
-//        if (mBluetoothLeService != null) {
-//            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-//            Log.d(TAG, "Connect request result=" + result);
-//        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(messageUpdateReceiver);
-    }
-
-    private static IntentFilter chatActivityIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-        return intentFilter;
     }
 
     private class GetMessagesTask extends AsyncTask<Void, Void, List<Message>>

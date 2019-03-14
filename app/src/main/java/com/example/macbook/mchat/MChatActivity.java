@@ -1,0 +1,52 @@
+package com.example.macbook.mchat;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.Toast;
+
+public abstract class MChatActivity extends AppCompatActivity {
+    private String TAG = MChatActivity.class.getSimpleName();
+
+    private final BroadcastReceiver appNotificationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "Broadcast received");
+            final String action = intent.getAction();
+            Toast.makeText(context, "Received " + action, Toast.LENGTH_SHORT).show();
+            onAppNotificationReceived(intent);
+        }
+    };
+
+    private static IntentFilter appNotificationIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+        intentFilter.addAction(AppNotification.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(AppNotification.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(AppNotification.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(AppNotification.ACTION_GATT_DEVICE_SELECTED);
+        return intentFilter;
+    }
+
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(appNotificationReceiver, appNotificationIntentFilter());
+//        if (mBluetoothLeService != null) {
+//            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
+//            Log.d(TAG, "Connect request result=" + result);
+//        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // TODO does this mean it is not receiving messages when it is paused?
+        unregisterReceiver(appNotificationReceiver);
+    }
+
+    public abstract void onAppNotificationReceived(Intent intent);
+}

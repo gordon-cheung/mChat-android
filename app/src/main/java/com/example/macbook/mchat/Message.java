@@ -30,7 +30,7 @@ public class Message implements Serializable {
     //    #define MLINK_STATE_SENT 6
     //    #define MLINK_STATE_ERROR 7
 
-    public static final int INIT = 0;
+    public static final int STATE_INIT = 0;
     public static final int TEXT = 1;
     public static final int PICTURE = 2;
     public static final int STATE_IN_PROGRESS = 5;

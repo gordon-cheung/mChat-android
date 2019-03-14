@@ -1,13 +1,9 @@
 package com.example.macbook.mchat
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.AsyncTask
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -17,7 +13,8 @@ import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.ArrayList
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : MChatActivity() {
+
     private val TAG = MainActivity::class.java.simpleName
     private var mRecyclerView: RecyclerView? = null
     private var mAdapter: ConversationRecyclerAdapter? = null
@@ -73,22 +70,8 @@ class MainActivity : AppCompatActivity() {
         getPermissions()
     }
 
-    // TODO: TEST THIS
-    private val messageUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            Log.d(TAG, "Broadcast received")
-            val action = intent.action
-            if (action === AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
-                Log.d(TAG, "Message received")
-                val msg = intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION) as Message
-                mAdapter?.updateConversations(msg)
-            }
-        }
-    }
-
     override fun onResume() {
         super.onResume()
-        registerReceiver(messageUpdateReceiver, mainActivityIntentFilter())
         GetConversationTask().execute();
         //        if (mBluetoothLeService != null) {
         //            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
@@ -96,15 +79,13 @@ class MainActivity : AppCompatActivity() {
         //        }
     }
 
-    override fun onPause() {
-        super.onPause()
-        unregisterReceiver(messageUpdateReceiver)
-    }
-
-    private fun mainActivityIntentFilter(): IntentFilter {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-        return intentFilter;
+    override fun onAppNotificationReceived(intent: Intent) {
+        val action = intent.getAction()
+        if (action === AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
+            Log.d(TAG, "Message received")
+            val msg = intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION) as Message
+            mAdapter?.updateConversations(msg)
+        }
     }
 
     private inner class GetConversationTask: AsyncTask<Void, Void, List<Message>>()
@@ -128,9 +109,12 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    // Request for permission for contacts and location services (for contact and bluetooth)
     private fun getPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 1)
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
         }
     }
 }
