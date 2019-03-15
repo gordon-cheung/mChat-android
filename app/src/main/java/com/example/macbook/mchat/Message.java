@@ -7,9 +7,11 @@ import android.arch.persistence.room.PrimaryKey;
 import java.io.Serializable;
 import java.util.Date;
 
+// TODO create inherited class for ack messages or chat messages?
 @Entity(tableName = "messages")
 public class Message implements Serializable {
     // TYPE
+    public static final int IS_SYSTEM = 0; // RENAME this to something else
     public static final int IS_SEND = 1;
     public static final int IS_RECEIVE = 2;
 
@@ -19,8 +21,19 @@ public class Message implements Serializable {
     public static final int STATUS_RECEIVED = 2;
 
     // DATA_TYPE
+    //    #define MLINK_STATE_INIT 0
+    //    #define MLINK_STATE_TEXT 1
+    //    #define MLINK_STATE_PICTURE 2
+    //    #define MLINK_STATE_STARTUP_COMPLETE 3
+    //    #define MLINK_STATE_NOT_READY 4
+    //    #define MLINK_STATE_IN_PROGRESS 5
+    //    #define MLINK_STATE_SENT 6
+    //    #define MLINK_STATE_ERROR 7
+
+    public static final int STATE_INIT = 0;
     public static final int TEXT = 1;
     public static final int PICTURE = 2;
+    public static final int STATE_IN_PROGRESS = 5;
 
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -47,12 +60,22 @@ public class Message implements Serializable {
 
     public Message() {}
 
+    // For System Packets
+    public Message(String contact, int dType) {
+        this.contactId = contact;
+        this.type = 0;
+        this.dataType = dType;
+        this.status = 0;
+        this.body = "";
+        this.timestamp = System.currentTimeMillis();
+    }
+
     // Obsolete
     public Message(String msgBody, String contact, final int msgType) {
         body = msgBody;
         contactId = contact;
         type = msgType;
-        dataType = 0; //
+        dataType = 1; //
         timestamp = System.currentTimeMillis();
         status = STATUS_PENDING;
     }

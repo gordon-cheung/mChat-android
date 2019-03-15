@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.bumptech.glide.Glide;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.ArrayList;
@@ -79,7 +78,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
                 Toast.makeText(mContext, contactName, Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent(mContext, ChatActivity.class);
-                intent.putExtra("USER_DATA", contactName);
+                intent.putExtra(AppNotification.CONTACT_DATA, contactName);
                 mContext.startActivity(intent);
             }
         });

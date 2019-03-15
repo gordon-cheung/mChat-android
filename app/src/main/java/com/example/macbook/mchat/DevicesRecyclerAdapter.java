@@ -1,11 +1,8 @@
 package com.example.macbook.mchat;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -52,26 +49,15 @@ public class DevicesRecyclerAdapter extends RecyclerView.Adapter {
                 String deviceName = mDeviceList.get(position).getName();
                 String deviceAddress = mDeviceList.get(position).getAddress();
 
+                Toast.makeText(mContext, "Connecting to: " + deviceAddress, Toast.LENGTH_SHORT).show();
+
                 Log.d(TAG, "onClick: clicked on: " + deviceName);
                 Log.d(TAG, "onClick: clicked on: " + deviceAddress);
 
-                final Intent intent = new Intent("DEVICE_SELECTED");
-                intent.putExtra("DEVICE_SELECTED", deviceAddress);
+                final Intent intent = new Intent(AppNotification.ACTION_GATT_DEVICE_SELECTED);
+                intent.putExtra(AppNotification.ACTION_GATT_DEVICE_SELECTED, deviceAddress);
                 Log.d(TAG, "Broadcasting bluetooth device selected");
                 mContext.sendBroadcast(intent);
-
-//                Intent intent = new Intent(mContext, BluetoothService.class);
-//                mContext.startService(intent);
-//
-//                Intent gattServiceIntent = new Intent(mContext, BluetoothService.class);
-//                mContext.bindService(gattServiceIntent, mContext.mServiceConnection, BIND_AUTO_CREATE);
-
-//                BluetoothService btService = new BluetoothService(mContext);
-//                btService.initialize();
-//                btService.connect(deviceAddress);
-//
-//                Intent gattServiceIntent = new Intent(mContext, BluetoothService.class);
-//                bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
             }
         });
     }

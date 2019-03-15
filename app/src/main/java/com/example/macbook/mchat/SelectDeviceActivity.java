@@ -1,24 +1,20 @@
 package com.example.macbook.mchat;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.*;
 import android.content.*;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-
 import java.util.ArrayList;
-import java.util.List;
 
 // TODO Add Scan Button and Clean up Activity
-public class SelectDeviceActivity extends AppCompatActivity {
+public class SelectDeviceActivity extends MChatActivity {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
     private ArrayList<String> mDeviceAddresses = new ArrayList<String>();
     private ArrayList<BluetoothDevice> mDevices = new ArrayList<BluetoothDevice>();
@@ -26,8 +22,10 @@ public class SelectDeviceActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothScanner;
     private BluetoothService mBluetoothService;
-
     private String connectDeviceAddress;
+
+    private RecyclerView mRecyclerView;
+    private DevicesRecyclerAdapter mAdapter;
 
     // Manage service lifecycle
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -39,10 +37,6 @@ public class SelectDeviceActivity extends AppCompatActivity {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            //String mDeviceAddress = "FD:93:67:7D:3E:1B";
-            //mBluetoothService.connect(mDeviceAddress);
-            Log.d(TAG, "Connecting to " + connectDeviceAddress);
             mBluetoothService.connect(connectDeviceAddress);
         }
 
@@ -51,9 +45,6 @@ public class SelectDeviceActivity extends AppCompatActivity {
             mBluetoothService = null;
         }
     };
-
-    private RecyclerView mRecyclerView;
-    private DevicesRecyclerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +58,6 @@ public class SelectDeviceActivity extends AppCompatActivity {
 //            finish();
 //        }
 
-        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
-        // BluetoothAdapter through BluetoothManager.
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
@@ -84,53 +73,22 @@ public class SelectDeviceActivity extends AppCompatActivity {
         mAdapter = new DevicesRecyclerAdapter(this, mDevices);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-//        Intent intent = new Intent(this, BluetoothService.class);
-//        startService(intent);
-//
-//        Intent gattServiceIntent = new Intent(this, BluetoothService.class);
-//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
-    private final BroadcastReceiver bluetoothDeviceReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Broadcast received");
+    @Override
+    public void onAppNotificationReceived(Intent intent) {
         final String action = intent.getAction();
-        if (action == "DEVICE_SELECTED") {
-            String deviceAddress = intent.getStringExtra("DEVICE_SELECTED");
-            Log.d(TAG, "Device Address: " + deviceAddress);
+        if (action == AppNotification.ACTION_GATT_DEVICE_SELECTED) {
+            String deviceAddress = intent.getStringExtra(AppNotification.ACTION_GATT_DEVICE_SELECTED);
+            Log.d(TAG, "Selected Device Address: " + deviceAddress);
             connectDeviceAddress = deviceAddress;
 
-            // Stop device scan
-            // See what happens when multiple devices are selected
-
-            // TODO  test this code
             Intent bluetoothServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
             startService(bluetoothServiceIntent);
 
             Intent gattServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
         }
-        }
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(bluetoothDeviceReceiver, deviceSelectIntentFilter());
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(bluetoothDeviceReceiver);
-    }
-
-    private static IntentFilter deviceSelectIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("DEVICE_SELECTED");
-        return intentFilter;
     }
 
     @Override
@@ -149,7 +107,7 @@ public class SelectDeviceActivity extends AppCompatActivity {
     private void scan() {
         mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
-        Log.d(TAG, "start scan");
+        Log.d(TAG, "Starting scan");
         //mBluetoothScanner.startScan(scanFilters, scanSetting, scanCallback);
         mBluetoothScanner.startScan(scanCallback);
 
@@ -158,7 +116,7 @@ public class SelectDeviceActivity extends AppCompatActivity {
         {
             @Override
             public void run() {
-                Log.d(TAG, "stop scan");
+                Log.d(TAG, "Scan stopped");
                 mBluetoothScanner.stopScan(scanCallback);
             }
         }, 10000);
