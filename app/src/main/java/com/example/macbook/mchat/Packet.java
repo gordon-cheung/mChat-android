@@ -26,11 +26,15 @@ public class Packet {
         int headerLength = 17;
         int packetLength = headerLength + (int)this.length;
 
-        ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
-        for (int i = headerLength; i < packetLength; i++) {
-            contentStream.write(pkt[i]);
+        try {
+            ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
+            for (int i = headerLength; i < packetLength; i++) {
+                contentStream.write(pkt[i]);
+            }
+            this.content = contentStream.toByteArray();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            Log.e(TAG, "Packet byte size does not match total length (17 " + this.length);
         }
-        this.content = contentStream.toByteArray();
     }
 
     public Packet(Message msg) {
