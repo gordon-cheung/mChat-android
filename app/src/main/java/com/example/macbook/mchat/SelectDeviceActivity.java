@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import java.util.ArrayList;
 
@@ -50,6 +51,7 @@ public class SelectDeviceActivity extends MChatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_device);
+        setSupportActionBar((Toolbar) findViewById(R.id.app_toolbar));
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
