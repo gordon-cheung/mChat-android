@@ -21,6 +21,7 @@
             app:layout_constraintRight_toRightOf="parent"/>
 
     <RelativeLayout
+        android:id="@+id/current_device_parent_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="@dimen/small_padding">
@@ -40,12 +41,12 @@
             <TextView android:id="@+id/current_device_name"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:text="Not Connected"
+                      android:text="@string/not_connected"
                       android:textSize="24dp"/>
             <TextView android:id="@+id/current_device_address"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:text="--:--:--:--:--:--"
+                      android:text="@string/not_connected_address"
                       android:textSize="12dp"/>
         </LinearLayout>
     </RelativeLayout>

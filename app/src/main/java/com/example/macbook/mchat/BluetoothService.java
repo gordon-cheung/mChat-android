@@ -37,8 +37,8 @@ public class BluetoothService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        //close();
         Log.d(TAG, "onUnbind");
+        close();
         return super.onUnbind(intent);
     }
 
@@ -47,8 +47,7 @@ public class BluetoothService extends Service {
     private BluetoothManager mBluetoothManager;
     private BluetoothGatt mBluetoothGatt;
     private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
-    private String mDeviceName = null;
-    private String mDeviceAddress = null;
+    private BluetoothDevice mCurrentDevice = null;
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -196,6 +195,7 @@ public class BluetoothService extends Service {
         return writeCharacteristic(packet.getBytes());
     }
 
+    // TODO
     public void receive(byte[] data) {
         Log.d(TAG, "RECEIVED RAW BYTES: " + ByteUtilities.getByteArrayInHexString(data));
         Packet packet = new Packet(data);
@@ -255,28 +255,50 @@ public class BluetoothService extends Service {
         }
 
         // Use existing bluetooth device to connect
-        if (mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) {
-                mConnectionState = STATE_CONNECTING;
-                return true;
-            } else {
-                return false;
+        if (mCurrentDevice  != null) {
+            if (mBluetoothGatt != null && mCurrentDevice.getAddress().equals(address)) {
+                Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+                if (mBluetoothGatt.connect()) {
+                    broadcast(AppNotification.ACTION_GATT_CONNECTING);
+                    mConnectionState = STATE_CONNECTING;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            else if (mBluetoothManager.getConnectionState(mCurrentDevice, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED) {
+                mBluetoothGatt.disconnect();
             }
         }
 
-        final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-        if (device == null) {
+        mCurrentDevice = mBluetoothAdapter.getRemoteDevice(address);
+        if (mCurrentDevice == null) {
             Log.e(TAG, "Device not found. Unable to connect.");
             return false;
         }
 
-        mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+        mBluetoothGatt = mCurrentDevice.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
-        mDeviceAddress = address;
-        mDeviceName = device.getName();
+        broadcast(AppNotification.ACTION_GATT_CONNECTING);
         mConnectionState = STATE_CONNECTING;
         return mBluetoothGatt.connect();
+    }
+
+    public void disconnect()  {
+        Log.d(TAG, "Disconnecting from " + getDeviceAddress());
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return;
+        }
+        mBluetoothGatt.disconnect();
+    }
+
+    private void close() {
+        if (mBluetoothGatt == null) {
+            return;
+        }
+        mBluetoothGatt.close();
+        mBluetoothGatt = null;
     }
 
     private int mConnectionState = STATE_DISCONNECTED;
@@ -316,10 +338,14 @@ public class BluetoothService extends Service {
     }
 
     public String getDeviceAddress() {
-        return mDeviceAddress;
+        return mCurrentDevice != null ? mCurrentDevice.getAddress() : null;
     }
 
     public String getDeviceName() {
-        return mDeviceName;
+        if (mCurrentDevice != null) {
+            return mCurrentDevice.getName() != null ? mCurrentDevice.getName() : getResources().getString(R.string.unknown_device);
+        }
+
+        return null;
     }
 }

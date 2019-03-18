@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -8,13 +9,13 @@ import android.content.*;
 import android.os.Handler;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -84,7 +85,7 @@ public class SelectDeviceActivity extends MChatActivity {
     }
 
     @Override
-    public void onAppNotificationReceived(Intent intent) {
+    protected void onAppNotificationReceived(Intent intent) {
         final String action = intent.getAction();
         if (action == AppNotification.ACTION_GATT_DEVICE_SELECTED) {
             String deviceAddress = intent.getStringExtra(AppNotification.ACTION_GATT_DEVICE_SELECTED);
@@ -94,7 +95,7 @@ public class SelectDeviceActivity extends MChatActivity {
             mBluetoothService.connect(connectDeviceAddress);
         }
 
-        if (action == AppNotification.ACTION_GATT_CONNECTED || action == AppNotification.ACTION_GATT_DISCONNECTED) {
+        if (action == AppNotification.ACTION_GATT_CONNECTED || action == AppNotification.ACTION_GATT_DISCONNECTED || action == AppNotification.ACTION_GATT_CONNECTING) {
             updateCurrentDevice();
         }
     }
@@ -185,10 +186,39 @@ public class SelectDeviceActivity extends MChatActivity {
                     TextView currentDeviceAddress = (TextView) findViewById(R.id.current_device_address);
                     currentDeviceAddress.setText(mBluetoothService.getDeviceAddress());
                 }
+
+                findViewById(R.id.current_device_parent_layout).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Log.d(TAG, "Current device clicked");
+                        showDisconnectDialog();
+                    }
+                });
             }
             else if (mBluetoothService.getConnectionState() == BluetoothService.STATE_DISCONNECTED) {
                 CircleImageView currentDeviceIcon = findViewById(R.id.current_device_icon);
                 currentDeviceIcon.setImageResource(R.drawable.ic_bluetooth_disabled_black_24dp);
+
+                findViewById(R.id.current_device_parent_layout).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Log.d(TAG, "Current device clicked");
+                        if (mBluetoothService.getDeviceName() != null && mBluetoothService.getDeviceAddress() != null) {
+                            mBluetoothService.connect(mBluetoothService.getDeviceAddress());
+                        }
+                    }
+                });
+            }
+            else if (mBluetoothService.getConnectionState() == BluetoothService.STATE_CONNECTING) {
+                CircleImageView currentDeviceIcon = findViewById(R.id.current_device_icon);
+                currentDeviceIcon.setImageResource(R.drawable.ic_bluetooth_searching_black_24dp);
+
+                if (mBluetoothService.getDeviceName() != null && mBluetoothService.getDeviceAddress() != null) {
+                    TextView currentDeviceName = (TextView) findViewById(R.id.current_device_name);
+                    currentDeviceName.setText(mBluetoothService.getDeviceName());
+                    TextView currentDeviceAddress = (TextView) findViewById(R.id.current_device_address);
+                    currentDeviceAddress.setText(mBluetoothService.getDeviceAddress());
+                }
             }
         }
     }
@@ -199,5 +229,22 @@ public class SelectDeviceActivity extends MChatActivity {
         } else {
             getOptionsMenu().findItem(R.id.action_scan).setTitle(getResources().getString(R.string.scan));
         }
+    }
+
+    private void showDisconnectDialog()  {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String deviceName = mBluetoothService.getDeviceName();
+        builder.setMessage("Disconnect from " + deviceName + "?")
+                .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        mBluetoothService.disconnect();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                    }
+                })
+                .show();
     }
 }

@@ -54,8 +54,11 @@ public abstract class MChatActivity extends AppCompatActivity {
             }
             else if (action == AppNotification.ACTION_GATT_DISCONNECTED) {
                 Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
-                ActionMenuItemView bluetoothAction = findViewById(R.id.action_bluetooth);
                 updateConnectionState(BluetoothService.STATE_DISCONNECTED);
+            }
+            else if (action == AppNotification.ACTION_GATT_CONNECTING) {
+                Toast.makeText(context, "Connecting to " + mBluetoothService.getDeviceAddress(), Toast.LENGTH_SHORT).show();
+                updateConnectionState(BluetoothService.STATE_CONNECTING);
             }
             onAppNotificationReceived(intent);
         }
@@ -68,6 +71,7 @@ public abstract class MChatActivity extends AppCompatActivity {
         intentFilter.addAction(AppNotification.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(AppNotification.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(AppNotification.ACTION_GATT_DEVICE_SELECTED);
+        intentFilter.addAction(AppNotification.ACTION_GATT_CONNECTING);
         return intentFilter;
     }
 
@@ -142,6 +146,9 @@ public abstract class MChatActivity extends AppCompatActivity {
             else if (connectionState == BluetoothService.STATE_DISCONNECTED) {
                 mOptionsMenu.findItem(R.id.action_bluetooth).setIcon(R.drawable.ic_bluetooth_disabled_black_24dp);
             }
+            else if (connectionState == BluetoothService.STATE_CONNECTING) {
+                mOptionsMenu.findItem(R.id.action_bluetooth).setIcon(R.drawable.ic_bluetooth_searching_black_24dp);
+            }
         }
     }
 
@@ -149,5 +156,5 @@ public abstract class MChatActivity extends AppCompatActivity {
         return mOptionsMenu;
     }
 
-    public abstract void onAppNotificationReceived(Intent intent);
+    protected abstract void onAppNotificationReceived(Intent intent);
 }

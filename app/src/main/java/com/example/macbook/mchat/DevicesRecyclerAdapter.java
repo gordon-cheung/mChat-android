@@ -49,8 +49,6 @@ public class DevicesRecyclerAdapter extends RecyclerView.Adapter {
                 String deviceName = mDeviceList.get(position).getName();
                 String deviceAddress = mDeviceList.get(position).getAddress();
 
-                Toast.makeText(mContext, "Connecting to: " + deviceAddress, Toast.LENGTH_SHORT).show();
-
                 Log.d(TAG, "onClick: clicked on: " + deviceName);
                 Log.d(TAG, "onClick: clicked on: " + deviceAddress);
 
@@ -82,7 +80,7 @@ public class DevicesRecyclerAdapter extends RecyclerView.Adapter {
         public void bind(BluetoothDevice device) {
             String deviceName = device.getName();
             if (deviceName == null || deviceName.isEmpty()) {
-                deviceName = "(Unknown)";
+                deviceName = mContext.getResources().getString(R.string.unknown_device);
             }
             mDeviceName.setText(deviceName);
             mDeviceAddress.setText(device.getAddress());
