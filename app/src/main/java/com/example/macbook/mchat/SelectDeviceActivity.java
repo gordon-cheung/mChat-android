@@ -7,6 +7,7 @@ import android.bluetooth.le.*;
 import android.content.*;
 import android.os.Handler;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +15,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.ArrayList;
 
@@ -32,8 +35,27 @@ public class SelectDeviceActivity extends MChatActivity {
 
     public boolean isScanning = false;
 
+    protected ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG,"On service connection in SelectDeviceActivity");
+            mBluetoothService = ((BluetoothService.LocalBinder) service).getService();
+            if (!mBluetoothService.initialize()) {
+                Log.e(TAG, "Unable to initialize Bluetooth");
+                finish();
+            }
+            updateCurrentDevice();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBluetoothService = null;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.mServiceConnection = mServiceConnection;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_device);
 
@@ -70,6 +92,10 @@ public class SelectDeviceActivity extends MChatActivity {
             connectDeviceAddress = deviceAddress;
 
             mBluetoothService.connect(connectDeviceAddress);
+        }
+
+        if (action == AppNotification.ACTION_GATT_CONNECTED || action == AppNotification.ACTION_GATT_DISCONNECTED) {
+            updateCurrentDevice();
         }
     }
 
@@ -147,8 +173,27 @@ public class SelectDeviceActivity extends MChatActivity {
         }
     };
 
+    private void updateCurrentDevice() {
+        if (mBluetoothService != null) {
+            if (mBluetoothService.getConnectionState() == BluetoothService.STATE_CONNECTED) {
+                CircleImageView currentDeviceIcon = findViewById(R.id.current_device_icon);
+                currentDeviceIcon.setImageResource(R.drawable.ic_bluetooth_connected_black_24dp);
+
+                if (mBluetoothService.getDeviceName() != null && mBluetoothService.getDeviceAddress() != null) {
+                    TextView currentDeviceName = (TextView) findViewById(R.id.current_device_name);
+                    currentDeviceName.setText(mBluetoothService.getDeviceName());
+                    TextView currentDeviceAddress = (TextView) findViewById(R.id.current_device_address);
+                    currentDeviceAddress.setText(mBluetoothService.getDeviceAddress());
+                }
+            }
+            else if (mBluetoothService.getConnectionState() == BluetoothService.STATE_DISCONNECTED) {
+                CircleImageView currentDeviceIcon = findViewById(R.id.current_device_icon);
+                currentDeviceIcon.setImageResource(R.drawable.ic_bluetooth_disabled_black_24dp);
+            }
+        }
+    }
+
     private void updateScanMenuItem() {
-        ActionMenuItemView scanMenuItem = findViewById(R.id.action_scan);
         if (isScanning) {
             getOptionsMenu().findItem(R.id.action_scan).setTitle(getResources().getString(R.string.stop_scan));
         } else {

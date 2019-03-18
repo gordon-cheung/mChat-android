@@ -47,7 +47,8 @@ public class BluetoothService extends Service {
     private BluetoothManager mBluetoothManager;
     private BluetoothGatt mBluetoothGatt;
     private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
-    private String mDeviceAddress;
+    private String mDeviceName = null;
+    private String mDeviceAddress = null;
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -273,12 +274,9 @@ public class BluetoothService extends Service {
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
         mDeviceAddress = address;
+        mDeviceName = device.getName();
         mConnectionState = STATE_CONNECTING;
         return mBluetoothGatt.connect();
-    }
-
-    public String getConnectedDeviceAddress() {
-        return mDeviceAddress;
     }
 
     private int mConnectionState = STATE_DISCONNECTED;
@@ -315,5 +313,13 @@ public class BluetoothService extends Service {
                 }
             }
         }
+    }
+
+    public String getDeviceAddress() {
+        return mDeviceAddress;
+    }
+
+    public String getDeviceName() {
+        return mDeviceName;
     }
 }
