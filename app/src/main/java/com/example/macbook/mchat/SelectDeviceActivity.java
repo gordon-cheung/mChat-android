@@ -58,6 +58,7 @@ public class SelectDeviceActivity extends MChatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_device);
         setSupportActionBar((Toolbar) findViewById(R.id.app_toolbar));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
@@ -181,7 +182,7 @@ public class SelectDeviceActivity extends MChatActivity {
     };
 
     private void updateScanMenuItem() {
-        ActionMenuItemView scanMenuItem = findViewById(R.id.action_scan);
+        MenuItem scanMenuItem = findViewById(R.id.action_scan);
         if (isScanning) {
             scanMenuItem.setTitle(getResources().getString(R.string.stop_scan));
         } else {

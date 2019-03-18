@@ -29,10 +29,30 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".SelectContactActivity"/>
-        <activity android:name=".ChatActivity">
+        <activity
+                android:name=".SelectContactActivity"
+                android:parentActivityName=".MainActivity" >
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".MainActivity" />
         </activity>
-        <activity android:name=".SelectDeviceActivity">
+        <activity android:name=".ChatActivity"
+                  android:parentActivityName=".MainActivity" >
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".MainActivity" />
+        </activity>
+        <activity android:name=".SelectDeviceActivity"
+                  android:parentActivityName=".MainActivity" >
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".MainActivity" />>
         </activity>
         <service android:name=".BluetoothService" android:enabled="true"></service>
     </application>
