@@ -19,7 +19,7 @@
             android:background="@drawable/rectangle_border"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>
-    
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/devicesRecyclerView"
         android:layout_width="match_parent"

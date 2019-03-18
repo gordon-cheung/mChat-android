@@ -4,14 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
-import android.support.annotation.LayoutRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
 
 public abstract class MChatActivity extends AppCompatActivity {
     private String TAG = MChatActivity.class.getSimpleName();
@@ -62,7 +59,7 @@ public abstract class MChatActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.appbar_menu, menu);
+        getMenuInflater().inflate(R.menu.appbar_main_menu, menu);
         return true;
     }
 

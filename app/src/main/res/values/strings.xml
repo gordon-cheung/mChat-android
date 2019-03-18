@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MChat</string>
+
+    <!-- Select Bluetooth Device Activity -->
+    <string name="available_devices">AVAILABLE DEVICES</string>
+    <string name="scan">SCAN</string>
+    <string name="stop_scan">STOP</string>
 </resources>

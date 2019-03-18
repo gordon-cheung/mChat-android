@@ -8,10 +8,14 @@ import android.content.*;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Bundle;
+import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+
 import java.util.ArrayList;
 
 // TODO Add Scan Button and Clean up Activity
@@ -27,6 +31,8 @@ public class SelectDeviceActivity extends MChatActivity {
 
     private RecyclerView mRecyclerView;
     private DevicesRecyclerAdapter mAdapter;
+
+    public boolean isScanning = false;
 
     // Manage service lifecycle
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -68,10 +74,7 @@ public class SelectDeviceActivity extends MChatActivity {
             Log.e(TAG, "Error with bluetooth");
         }
 
-        getDeviceList();
-
         mRecyclerView = findViewById(R.id.devicesRecyclerView);
-
         mAdapter = new DevicesRecyclerAdapter(this, mDevices);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -101,25 +104,47 @@ public class SelectDeviceActivity extends MChatActivity {
         mBluetoothService = null;
     }
 
-    private void getDeviceList() {
-        Log.d(TAG, "Retrieving devices...");
-        scan();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.appbar_bluetooth_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_scan:
+                if (!isScanning) {
+                    scan();
+                }
+                else {
+                    stopScan();
+                }
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     private void scan() {
-        mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
-
         Log.d(TAG, "Starting scan");
-        //mBluetoothScanner.startScan(scanFilters, scanSetting, scanCallback);
+        isScanning = true;
+        mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
         mBluetoothScanner.startScan(scanCallback);
+        updateScanMenuItem();
 
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable()
         {
             @Override
             public void run() {
-                Log.d(TAG, "Scan stopped");
-                mBluetoothScanner.stopScan(scanCallback);
+            if (isScanning) {
+                stopScan();
+            }
             }
         }, 10000);
 
@@ -127,11 +152,21 @@ public class SelectDeviceActivity extends MChatActivity {
         // java.lang.SecurityException: Need ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION permission to get scan results
         // occurs if location is not enabled, tell user of this error
     }
+
+    private void stopScan() {
+        Log.d(TAG, "Stopping scan");
+        isScanning = false;
+        mBluetoothScanner.stopScan(scanCallback);
+        updateScanMenuItem();
+    }
 //
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanFailed(int errorCode) {
-
+            // TODO
+            // java.lang.SecurityException: Need ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION permission to get scan results
+            // occurs if location is not enabled, tell user of this error
+            // is this called for this?
         }
 
         @Override
@@ -144,4 +179,13 @@ public class SelectDeviceActivity extends MChatActivity {
             }
         }
     };
+
+    private void updateScanMenuItem() {
+        ActionMenuItemView scanMenuItem = findViewById(R.id.action_scan);
+        if (isScanning) {
+            scanMenuItem.setTitle(getResources().getString(R.string.stop_scan));
+        } else {
+            scanMenuItem.setTitle(getResources().getString(R.string.scan));
+        }
+    }
 }
