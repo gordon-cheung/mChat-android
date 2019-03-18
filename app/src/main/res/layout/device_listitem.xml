@@ -24,8 +24,8 @@
               android:layout_height="wrap_content"
               android:textSize="12dp"/>
     <View
-            android:layout_width="0dp"
-            android:layout_height="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="2px"
             android:background="#dfdfdf"
             android:layout_marginBottom="0dp"/>
 </LinearLayout>

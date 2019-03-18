@@ -12,6 +12,7 @@ public final class AppNotification {
     // BLUETOOTH STATUS
     public final static String ACTION_GATT_DEVICE_SELECTED = "ACTION_GATT_DEVICE_SELECTED";
     public final static String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_CONNECTING = "ACTION_GATT_CONNECTING";
     public final static String ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";
 

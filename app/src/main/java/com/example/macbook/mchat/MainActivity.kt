@@ -7,7 +7,9 @@ import android.os.Build
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,6 +27,7 @@ class MainActivity : MChatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.app_toolbar))
 
         mAppDatabase = AppDatabase.getInstance(this)
 

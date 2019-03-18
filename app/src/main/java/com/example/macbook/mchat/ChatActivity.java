@@ -22,12 +22,12 @@ public class ChatActivity extends MChatActivity {
     private AppDatabase mAppDatabase;
 
     private BluetoothService mBluetoothService;
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    protected ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBluetoothService = ((BluetoothService.LocalBinder) service).getService();
-            Log.d(TAG, "Currently connected device: " + mBluetoothService.getConnectedDeviceAddress());
+            Log.d(TAG, "Currently connected device: " + mBluetoothService.getDeviceAddress());
             Log.d(TAG, "Connection State: " + mBluetoothService.getConnectionState());
         }
 
