@@ -257,6 +257,7 @@ public class BluetoothService extends Service {
         if (mBluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
+                mConnectionState = STATE_CONNECTING;
                 return true;
             } else {
                 return false;
@@ -272,6 +273,7 @@ public class BluetoothService extends Service {
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
         mDeviceAddress = address;
+        mConnectionState = STATE_CONNECTING;
         return mBluetoothGatt.connect();
     }
 
@@ -280,9 +282,9 @@ public class BluetoothService extends Service {
     }
 
     private int mConnectionState = STATE_DISCONNECTED;
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
+    public static final int STATE_DISCONNECTED = 0;
+    public static final int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTED = 2;
 
     public int getConnectionState() {
         return mConnectionState;

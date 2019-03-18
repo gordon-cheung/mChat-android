@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.*;
 import android.content.*;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Bundle;
 import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,7 +25,6 @@ public class SelectDeviceActivity extends MChatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothScanner;
-    private BluetoothService mBluetoothService;
     private String connectDeviceAddress;
 
     private RecyclerView mRecyclerView;
@@ -34,29 +32,11 @@ public class SelectDeviceActivity extends MChatActivity {
 
     public boolean isScanning = false;
 
-    // Manage service lifecycle
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mBluetoothService = ((BluetoothService.LocalBinder) service).getService();
-            if (!mBluetoothService.initialize()) {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-            }
-            mBluetoothService.connect(connectDeviceAddress);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mBluetoothService = null;
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_device);
+
         setSupportActionBar((Toolbar) findViewById(R.id.app_toolbar));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -89,26 +69,13 @@ public class SelectDeviceActivity extends MChatActivity {
             Log.d(TAG, "Selected Device Address: " + deviceAddress);
             connectDeviceAddress = deviceAddress;
 
-            Intent bluetoothServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
-            startService(bluetoothServiceIntent);
-
-            Intent gattServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
-            bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+            mBluetoothService.connect(connectDeviceAddress);
         }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // TODO add service is connected flag
-        //unbindService(mServiceConnection);
-        mBluetoothService = null;
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.appbar_bluetooth_menu, menu);
+        onCreateOptionsMenu(R.menu.appbar_bluetooth_menu, menu);
         return true;
     }
 
@@ -127,7 +94,6 @@ public class SelectDeviceActivity extends MChatActivity {
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
-
         }
     }
 
@@ -182,11 +148,11 @@ public class SelectDeviceActivity extends MChatActivity {
     };
 
     private void updateScanMenuItem() {
-        MenuItem scanMenuItem = findViewById(R.id.action_scan);
+        ActionMenuItemView scanMenuItem = findViewById(R.id.action_scan);
         if (isScanning) {
-            scanMenuItem.setTitle(getResources().getString(R.string.stop_scan));
+            getOptionsMenu().findItem(R.id.action_scan).setTitle(getResources().getString(R.string.stop_scan));
         } else {
-            scanMenuItem.setTitle(getResources().getString(R.string.scan));
+            getOptionsMenu().findItem(R.id.action_scan).setTitle(getResources().getString(R.string.scan));
         }
     }
 }
