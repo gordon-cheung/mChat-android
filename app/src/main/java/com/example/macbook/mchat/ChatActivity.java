@@ -6,6 +6,7 @@ import android.os.IBinder;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Button;
 import android.view.View;
@@ -19,37 +20,23 @@ public class ChatActivity extends MChatActivity {
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
     private String contactId;
-    private AppDatabase mAppDatabase;
-
-    private BluetoothService mBluetoothService;
-    protected ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mBluetoothService = ((BluetoothService.LocalBinder) service).getService();
-            Log.d(TAG, "Currently connected device: " + mBluetoothService.getDeviceAddress());
-            Log.d(TAG, "Connection State: " + mBluetoothService.getConnectionState());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        setSupportActionBar((Toolbar) findViewById(R.id.app_toolbar));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mAppDatabase = AppDatabase.getInstance(this);
-
+        // TODO aggregate Contact with ChatActivity
         contactId = getIntent().getExtras().getString(AppNotification.CONTACT_DATA);
         getSupportActionBar().setTitle(contactId);
 
+        // TODO remove initial messageList
         ArrayList<Message> messageList =  new ArrayList<Message>();
 
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
+        // TODO update user list
         mAdapter = new ChatAdapter(messageList, "Gordon");
 
         mRecyclerView.setAdapter(mAdapter);
@@ -63,12 +50,9 @@ public class ChatActivity extends MChatActivity {
                 final EditText editText = findViewById(R.id.edittext_chatbox);
                 String message = editText.getText().toString();
 
-                // TODO replace with current app user id
-                SendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
-
-                // TODO remove this code
-                if (message.equals("Hello")) {
-                    ReceiveMessage(new Message("How are you?", contactId, Message.IS_RECEIVE));
+                if (!message.isEmpty()) {
+                    SendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
+                    editText.setText("");
                 }
             }
         });
@@ -89,9 +73,6 @@ public class ChatActivity extends MChatActivity {
                 sendBroadcast(broadcastTestIntent);
             }
         });
-
-        Intent gattServiceIntent = new Intent(this, BluetoothService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
     private boolean SendMessage(final Message msg) {
@@ -107,19 +88,16 @@ public class ChatActivity extends MChatActivity {
             @Override
             public void run() {
             Log.d(TAG, "Inserting stored sent message");
-            mAppDatabase.messageDao().insert(msg);
+            AppDatabase.getInstance().messageDao().insert(msg);
             }
         });
 
-        // TODO Async run method
-        try {
-            boolean success = mBluetoothService.send(msg);
-            // update or insert success message and u pdate UI
-        } catch(Exception ex) {
-            // update or insert failed message and update UI
+        // TODO handle messages failed to send
+        if (mBluetoothService.send(msg)) {
+            Log.d(TAG, "Message successfully sent");
+        } else {
+            Log.e(TAG, "Messaage failed to send");
         }
-        //mBluetoothService.writeCharcteristic(msg.getMessageBody());
-
         return true;
     }
 
@@ -149,7 +127,6 @@ public class ChatActivity extends MChatActivity {
         if (action == AppNotification.MESSAGE_RECEIVED_NOTIFICATION) {
             Log.d(TAG, "Message Received");
             Message msg = (Message)intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-            msg.printMessage();
             if (msg.getContactId().equals(contactId)) {
                 ReceiveMessage(msg);
             }
@@ -160,7 +137,7 @@ public class ChatActivity extends MChatActivity {
     {
         @Override
         protected List<Message> doInBackground(Void... voids) {
-            return mAppDatabase.messageDao().getAll(contactId);
+            return AppDatabase.getInstance().messageDao().getAll(contactId);
         }
 
         @Override
