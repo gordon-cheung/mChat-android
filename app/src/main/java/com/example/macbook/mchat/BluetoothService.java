@@ -200,6 +200,9 @@ public class BluetoothService extends Service {
         {
             processNACK(msg);
         }
+        else if (msg.getDataType() == Message.IN_PROGRESS) {
+            updateMessageStatus(msg, Message.IN_PROGRESS);
+        }
         // Handle ACK
         else if (msg.getDataType() == Message.SENT) {
             // Broadcast Notification
