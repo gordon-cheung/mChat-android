@@ -55,20 +55,20 @@ class MainActivity : MChatActivity() {
             startActivity(intent)
         }
 
-        // TODO: Remove
-        val testButton = findViewById<Button>(R.id.testButton)
-        testButton.setOnClickListener(View.OnClickListener {
-            Log.d(TAG, "TEST BUTTON CLICKED")
-            val broadcastTestIntent = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
-            broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message)
-            sendBroadcast(broadcastTestIntent)
-
-            val broadcastTestIntent2 = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
-            broadcastTestIntent2.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message2)
-            sendBroadcast(broadcastTestIntent2)
-        })
+//        // TODO: Remove
+//        val testButton = findViewById<Button>(R.id.testButton)
+//        testButton.setOnClickListener(View.OnClickListener {
+//            Log.d(TAG, "TEST BUTTON CLICKED")
+//            val broadcastTestIntent = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
+//            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
+//            broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message)
+//            sendBroadcast(broadcastTestIntent)
+//
+//            val broadcastTestIntent2 = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
+//            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
+//            broadcastTestIntent2.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message2)
+//            sendBroadcast(broadcastTestIntent2)
+//        })
 
         getPermissions()
     }

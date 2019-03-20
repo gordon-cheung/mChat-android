@@ -5,35 +5,33 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.Date;
 
 // TODO create inherited class for ack messages or chat messages?
 @Entity(tableName = "messages")
 public class Message implements Serializable {
     // TYPE
-    public static final int IS_SYSTEM = 0; // RENAME this to something else
-    public static final int IS_SEND = 1;
-    public static final int IS_RECEIVE = 2;
+    public static final int IS_SEND = 0;
+    public static final int IS_RECEIVE = 1;
 
     // STATUS
     public static final int STATUS_PENDING = 0;
     public static final int STATUS_SENT = 1;
     public static final int STATUS_RECEIVED = 2;
+    public static final int STATUS_FAILED = 3;
 
     // DATA_TYPE
-    //    #define MLINK_STATE_INIT 0
-    //    #define MLINK_STATE_TEXT 1
-    //    #define MLINK_STATE_PICTURE 2
-    //    #define MLINK_STATE_STARTUP_COMPLETE 3
-    //    #define MLINK_STATE_NOT_READY 4
-    //    #define MLINK_STATE_IN_PROGRESS 5
-    //    #define MLINK_STATE_SENT 6
-    //    #define MLINK_STATE_ERROR 7
-
     public static final int STATE_INIT = 0;
     public static final int TEXT = 1;
     public static final int PICTURE = 2;
-    public static final int STATE_IN_PROGRESS = 5;
+    public static final int STARTUP_COMPLETE = 3;
+    public static final int NOT_READY = 4;
+    public static final int IN_PROGRESS = 5;
+    public static final int SENT = 6;
+    public static final int ERROR = 7;
+    public static final int BUFFER_FULL = 8;
+    public static final int TIMEOUT = 9;
 
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -50,6 +48,9 @@ public class Message implements Serializable {
     @ColumnInfo(name = "status")
     private int status;
 
+    @ColumnInfo(name = "msg_id")
+    private int msgId;
+
     @ColumnInfo(name = "body")
     private String body;
 
@@ -60,35 +61,6 @@ public class Message implements Serializable {
 
     public Message() {}
 
-    // For System Packets
-    public Message(String contact, int dType) {
-        this.contactId = contact;
-        this.type = 0;
-        this.dataType = dType;
-        this.status = 0;
-        this.body = "";
-        this.timestamp = System.currentTimeMillis();
-    }
-
-    // Obsolete
-    public Message(String msgBody, String contact, final int msgType) {
-        body = msgBody;
-        contactId = contact;
-        type = msgType;
-        dataType = 1; //
-        timestamp = System.currentTimeMillis();
-        status = STATUS_PENDING;
-    }
-
-    public Message(String msgBody, String contact, final int msgType, final int dType) {
-        body = msgBody;
-        contactId = contact;
-        type = msgType;
-        dataType = dType;
-        timestamp = System.currentTimeMillis();
-        status = STATUS_PENDING;
-    }
-
     public Message(String msgBody, String contact, final int msgType, final int dType, final long time) {
         body = msgBody;
         contactId = contact;
@@ -96,6 +68,35 @@ public class Message implements Serializable {
         dataType = dType;
         timestamp = time;
         status = STATUS_PENDING;
+        msgId = 0;
+    }
+    public Message(String msgBody, String contact, final int msgType, final int dType, final int messageId) {
+        body = msgBody;
+        contactId = contact;
+        type = msgType;
+        dataType = dType;
+        timestamp = System.currentTimeMillis();
+        status = STATUS_PENDING;
+        msgId = messageId;
+    }
+
+    public Message(String msgBody, String contact, final int msgType, final int dType, final long time, final int stat) {
+        body = msgBody;
+        contactId = contact;
+        type = msgType;
+        dataType = dType;
+        timestamp = time;
+        status = stat;
+    }
+
+    public Message(Packet packet, int messageType, int msgStatus) {
+        body = new String(packet.getContent());
+        contactId = new String(packet.getAddress());
+        dataType = getDataType();
+        timestamp = ByteBuffer.wrap(packet.getTimestamp()).getInt();
+        type = messageType;
+        status = msgStatus;
+        msgId = packet.getMsgId();
     }
 
     public int getId() {
@@ -116,6 +117,8 @@ public class Message implements Serializable {
 
     public int getStatus() { return status; }
 
+    public int getMsgId() { return msgId; }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -128,9 +131,7 @@ public class Message implements Serializable {
 
     public void setType(int type) { this.type = type; }
 
-    public void setTimestamp(long time) {
-        this.timestamp = time;
-    }
+    public void setTimestamp(long time) { this.timestamp = time; }
 
     public void setDataType(int type) {
         this.dataType = type;
@@ -138,12 +139,15 @@ public class Message implements Serializable {
 
     public void setStatus(int status) { this.status = status; }
 
+    public void setMsgId(int messsageId) { this.msgId = messsageId; }
+
     public void printMessage() {
         System.out.println("ContactId: " + contactId);
         System.out.println("Type: " + type);
         System.out.println("DataType: " + dataType);
         System.out.println("Body: " + body);
         System.out.println("Timestamp: " + timestamp);
+        System.out.println("MessageId: " + msgId);
     }
 
 }

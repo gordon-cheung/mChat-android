@@ -19,6 +19,12 @@ public interface MessageDao {
             "on m1.contact_id = m2.contact_id and m1.timestamp = m2.max_timestamp Order By timestamp desc")
     List<Message> getLatestUniqueMessages();
 
+    @Query("SELECT * FROM Messages WHERE contact_id ==:id AND msg_id ==:msgId AND status ==:status")
+    List<Message> getAll(String id, int msgId, int status);
+
     @Insert
     void insert(Message msg);
+
+    @Query ("UPDATE Messages SET status=:status WHERE contact_id ==:id AND msg_id ==:msgId")
+    void updateStatus(String id, int msgId, int status);
 }

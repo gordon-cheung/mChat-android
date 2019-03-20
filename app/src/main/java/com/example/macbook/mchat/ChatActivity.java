@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.EditText;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 // TODO Cleanup Chat activity
 public class ChatActivity extends MChatActivity {
@@ -23,6 +22,7 @@ public class ChatActivity extends MChatActivity {
     private AppDatabase mAppDatabase;
 
     private BluetoothService mBluetoothService;
+    static int mMsgId = 0;
     protected ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -37,6 +37,14 @@ public class ChatActivity extends MChatActivity {
 
         }
     };
+
+    static int incrementMessageId() {
+        mMsgId++;
+        if (mMsgId >= 65536){
+            mMsgId = 0;
+        }
+        return mMsgId;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +72,8 @@ public class ChatActivity extends MChatActivity {
                 final EditText editText = findViewById(R.id.edittext_chatbox);
                 String message = editText.getText().toString();
 
-                // TODO replace with current app user id
-                Message msg = new Message(message, contactId, Message.IS_SEND, Message.TEXT);
+                Message msg = new Message(message, contactId, Message.IS_SEND, Message.TEXT, incrementMessageId());
                 SendMessage(msg);
-                // TODO remove this code
-                if (message.equals("Hello")) {
-                    ReceiveMessage(new Message("How are you?", contactId, Message.IS_RECEIVE));
-                }
             }
         });
 
@@ -132,14 +135,6 @@ public class ChatActivity extends MChatActivity {
         mAdapter.notifyItemInserted(currentSize);
 
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
-
-//        AsyncTask.execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d(TAG, "Inserting stored received message");
-//                mAppDatabase.messageDao().insert(msg);
-//            }
-//        });
 
         return true;
     }
