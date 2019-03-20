@@ -172,27 +172,11 @@ public class BluetoothService extends Service {
         return success;
     }
 
-    private boolean writeCharacteristic(byte[] data) {
-        boolean success = false;
-        try {
-            nordicUARTGattCharacteristicTX.setValue(data);
-            Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
-            success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
-
-            if (!success) {
-                Log.d(TAG, "WriteCharacteristic failed");
-            }
-        } catch (Exception ex) {
-
-        }
-
-        return success;
-    }
-
-    public boolean send(Message message) {
+    public void send(Message message) {
         Packet packet = new Packet(message);
-        Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-        return writeCharacteristic(packet.getBytes());
+        PacketQueue.writeNewPacket(packet);
+        //Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+        PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
     }
 
     // TODO

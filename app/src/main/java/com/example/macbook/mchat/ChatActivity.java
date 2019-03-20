@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.EditText;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 // TODO Cleanup Chat activity
 public class ChatActivity extends MChatActivity {
@@ -64,8 +65,8 @@ public class ChatActivity extends MChatActivity {
                 String message = editText.getText().toString();
 
                 // TODO replace with current app user id
-                SendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
-
+                Message msg = new Message(message, contactId, Message.IS_SEND, Message.TEXT);
+                SendMessage(msg);
                 // TODO remove this code
                 if (message.equals("Hello")) {
                     ReceiveMessage(new Message("How are you?", contactId, Message.IS_RECEIVE));
@@ -113,7 +114,7 @@ public class ChatActivity extends MChatActivity {
 
         // TODO Async run method
         try {
-            boolean success = mBluetoothService.send(msg);
+            mBluetoothService.send(msg);
             // update or insert success message and u pdate UI
         } catch(Exception ex) {
             // update or insert failed message and update UI
