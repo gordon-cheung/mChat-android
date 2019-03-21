@@ -115,9 +115,7 @@ class MainActivity : MChatActivity() {
     // Request for permission for contacts and location services (for contact and bluetooth)
     private fun getPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 1)
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_COARSE_LOCATION), 1)
         }
     }
 }
