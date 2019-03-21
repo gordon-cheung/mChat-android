@@ -18,6 +18,7 @@ public final class AppNotification {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";
 
     //
+    public final static String IMAGE_DATA = "IMAGE_DATA";
     public final static String CONTACT_DATA = "CONTACT_DATA";
     private AppNotification() {
 

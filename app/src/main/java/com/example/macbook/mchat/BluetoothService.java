@@ -10,7 +10,11 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
 
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
+import java.nio.Buffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -171,11 +175,47 @@ public class BluetoothService extends Service {
         return success;
     }
 
-    public void send(Message message) {
-        Packet packet = new Packet(message);
-        PacketQueue.writeNewPacket(packet);
-        //Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-        PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+    public boolean send(Message message) {
+        if (message.getDataType() == Message.TEXT) {
+            Packet packet = new Packet(message);
+            PacketQueue.writeNewPacket(packet);
+            Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+            PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            return true;
+        } else if (message.getDataType() == Message.PICTURE) {
+            // TODO test this
+            try {
+                byte[] imageBytes = message.getImageBytes();
+                ArrayList<Packet> packets = new ArrayList<>();
+                for (int i = 0; i < imageBytes.length; i += Packet.MAX_CONTENT_SIZE) {
+                    if (i + Packet.MAX_CONTENT_SIZE < imageBytes.length) {
+                        byte[] buffer = Arrays.copyOfRange(imageBytes, i, i + Packet.MAX_CONTENT_SIZE);
+                        packets.add(new Packet(message, buffer));
+                    }
+                    else {
+                        byte[] buffer =Arrays.copyOfRange(imageBytes, i, i + imageBytes.length);
+                        packets.add(new Packet(message, buffer));
+                    }
+                }
+
+                // TODO remove this after testing
+                for (Packet p : packets) {
+                    p.printPacket();
+                }
+
+//                for (Packet packet : packets) {
+//                    // TODO handle what happens when image was failed to be sent for one packet
+//                    if (!writeCharacteristic(packet.getBytes())) {
+//                        return false;
+//                    }
+//                }
+                return true;
+            } catch(Exception ex) {
+                Log.e(TAG, ex.getMessage());
+                return false;
+            }
+        }
+        return false;
     }
 
     public void receive(byte[] data) {

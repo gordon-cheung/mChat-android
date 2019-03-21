@@ -9,6 +9,19 @@ import java.util.Calendar;
 
 public class Packet {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
+
+    // TODO update packet constructor to fit this
+    private static final int LENGTH_INDEX = 0;
+    //private static final int ADDRESS_INDEX = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+    private static final int DATA_TYPE_INDEX = 11;
+    private static final int MSG_ID_INDEX =12;
+    //private static final int TIMESTAMP_INDEX = 13,14,15,16;
+
+    public static final int HEADER_LENGTH = 17;
+
+    public static final int MAX_CONTENT_SIZE = 244;
+
+
     private byte length;
     private byte[] address;
     private byte dataType;
@@ -60,6 +73,13 @@ public class Packet {
         // Get Epoch Time
         int dateInSec2 = ByteBuffer.wrap(this.timestamp).getInt();
         System.out.println("EPOCH: " + dateInSec2);
+    }
+
+    public Packet(Message msg, byte[] content) {
+        this(msg);
+
+        this.content = content;
+        this.length = (byte)content.length;
     }
 
     public void printPacket() {

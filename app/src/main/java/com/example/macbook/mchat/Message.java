@@ -3,6 +3,9 @@ package com.example.macbook.mchat;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -148,6 +151,21 @@ public class Message implements Serializable {
         System.out.println("Body: " + body);
         System.out.println("Timestamp: " + timestamp);
         System.out.println("MessageId: " + msgId);
+    }
+
+    // TODO  Custom exception
+    public byte[] getImageBytes() throws Exception {
+        if (this.getDataType() == Message.PICTURE) {
+            Bitmap image = BitmapFactory.decodeFile(this.body);
+
+            // Apply image compression algorithm
+
+            ByteBuffer byteBuffer = ByteBuffer.allocate(image.getByteCount());
+            image.copyPixelsToBuffer(byteBuffer);
+            return byteBuffer.array();
+        }
+
+        throw new Exception("Message is not an image");
     }
 
 }
