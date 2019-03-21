@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.nio.Buffer;
@@ -183,13 +184,18 @@ public class BluetoothService extends Service {
             PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
-            // TODO test this
-//                for (Packet packet : packets) {
-//                    // TODO handle what happens when image was failed to be sent for one packet
-//                    if (!writeCharacteristic(packet.getBytes())) {
-//                        return false;
-//                    }
-//                }
+            try {
+                ArrayList<Packet> packets = Packet.constructPackets(message);
+                for (Packet pkt : packets) {
+                    PacketQueue.writeNewPacket(pkt);
+                    Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                    PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                }
+            } catch (IOException ex) {
+                Log.e(TAG, ex.getMessage());
+                return false;
+            }
+            return true;
         }
         return false;
     }

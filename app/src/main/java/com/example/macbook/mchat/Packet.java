@@ -19,17 +19,19 @@ import java.util.Calendar;
 public class Packet {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
 
-    // TODO update packet constructor to fit this
-    private static final int LENGTH_INDEX = 0;
-    //private static final int ADDRESS_INDEX = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
-    private static final int DATA_TYPE_INDEX = 11;
-    private static final int MSG_ID_INDEX =12;
-    //private static final int TIMESTAMP_INDEX = 13,14,15,16;
+    private static final int PACKET_LENGTH_INDEX = 0;
+    private static final int PACKET_ADDRESS_INDEX = 1;
+    private static final int PACKET_ADDRESS_LENGTH = 10;
+    private static final int PACKET_DATA_TYPE_INDEX = 11;
+    private static final int PACKET_MSG_ID_INDEX = 12;
+    private static final int PACKET_MSG_ID_LENGTH = 2;
+    private static final int PACKET_TIMESTAMP_INDEX = 14;
+    private static final int PACKET_TIMESTAMP_LENGTH = 4;
 
-    public static final int HEADER_LENGTH = 17;
+    private static final int PACKET_HEADER_LENGTH = 18;
 
-    public static final int MAX_PACKET_SIZE = 244;
-    public static final int MAX_CONTENT_SIZE = MAX_PACKET_SIZE - HEADER_LENGTH;
+    private static final int PACKET_MAX_SIZE = 244;
+    private static final int PACKET_MAX_CONTENT_SIZE = PACKET_MAX_SIZE - PACKET_HEADER_LENGTH;
 
 
     private byte length;
@@ -40,18 +42,20 @@ public class Packet {
     private byte[] content;
 
     public Packet(byte[] pkt) {
-        this.length = pkt[0];
-        this.address = new byte[] {pkt[1], pkt[2], pkt[3], pkt[4], pkt[5], pkt[6], pkt[7], pkt[8], pkt[9], pkt[10]};
-        this.dataType = pkt[11];
-        this.msgId = new byte[] {pkt[12], pkt[13]};
-        this.timestamp = new byte[] {pkt[14], pkt[15], pkt[16], pkt[17]};
+        this.length = pkt[PACKET_LENGTH_INDEX];
+        this.address = new byte[PACKET_ADDRESS_LENGTH];
+        System.arraycopy(pkt, PACKET_ADDRESS_INDEX, this.address, 0, PACKET_ADDRESS_LENGTH);
+        this.dataType = pkt[PACKET_DATA_TYPE_INDEX];
+        this.msgId = new byte[PACKET_MSG_ID_LENGTH];
+        System.arraycopy(pkt, PACKET_MSG_ID_INDEX, this.msgId, 0, PACKET_MSG_ID_LENGTH);
+        this.timestamp = new byte[PACKET_TIMESTAMP_LENGTH];
+        System.arraycopy(pkt, PACKET_TIMESTAMP_INDEX, this.timestamp, 0, PACKET_TIMESTAMP_LENGTH);
 
-        int headerLength = 18;
-        int packetLength = headerLength + (int)this.length;
+        int packetLength = PACKET_HEADER_LENGTH + (int)this.length;
 
         try {
             ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
-            for (int i = headerLength; i < packetLength; i++) {
+            for (int i = PACKET_HEADER_LENGTH; i < packetLength; i++) {
                 contentStream.write(pkt[i]);
             }
             this.content = contentStream.toByteArray();
@@ -72,16 +76,8 @@ public class Packet {
         this.msgId = new byte[2];
         this.msgId[1] =  (byte)(msg.getMsgId() & 0xFF);
         this.msgId[0] = (byte)((msg.getMsgId() >> 8) & 0xFF);
-
-        // TODO  change Timestamp in  message class to use System.currentTimeMillis, store as long
         int dateInSec = (int) (msg.getTimestamp() / 1000);
-
         this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();
-
-        // Get Epoch Time
-        int dateInSec2 = ByteBuffer.wrap(this.timestamp).getInt();
-        System.out.println("EPOCH: " + dateInSec2);
-
         this.content = msg.getBody().getBytes();
         this.length = (byte)(content.length);
     }
@@ -95,7 +91,6 @@ public class Packet {
 
     public void printPacket() {
         System.out.println("Packet: " + ByteUtilities.getByteArrayInHexString(getBytes()));
-
         System.out.println("Length: " + ByteUtilities.getByteInHexString(length));
         System.out.println("Address: " + ByteUtilities.getByteArrayInHexString((address)));
         System.out.println("DataType: " + ByteUtilities.getByteInHexString(dataType));
@@ -132,22 +127,17 @@ public class Packet {
             outputStream.write(msgId);
             outputStream.write(timestamp);
             outputStream.write(content);
-        } catch(Exception ex) {
-
+        } catch(IOException ex) {
+            Log.e(TAG, ex.getMessage());
         }
-
         return outputStream.toByteArray();
-    }
-
-    public void setDataType(byte dataType) {
-        this.dataType = dataType;
     }
 
     public void setContent(byte[] content) {
         this.content = content;
+        this.length = (byte)content.length;
     }
 
-    // TODO test this
     public static ArrayList<Packet> constructPackets(Message msg) throws IOException {
         ArrayList<Packet> packets = new ArrayList<>();
         if (msg.getDataType() == Message.PICTURE) {
@@ -181,9 +171,9 @@ public class Packet {
     public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
         ArrayList<Packet> packets = new ArrayList<>();
         int size = image.length;
-        for (int i = 0; i < size; i += MAX_CONTENT_SIZE) {
-            if (i + Packet.MAX_CONTENT_SIZE < size) {
-                byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.MAX_CONTENT_SIZE);
+        for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
+            if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
+                byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.PACKET_MAX_CONTENT_SIZE);
                 packets.add(new Packet(msg, buffer));
             }
             else {
