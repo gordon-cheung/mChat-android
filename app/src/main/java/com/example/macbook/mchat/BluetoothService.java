@@ -238,6 +238,7 @@ public class BluetoothService extends Service {
         // Handle NACKs
         else if (msg.getDataType() == Message.BUFFER_FULL || msg.getDataType() == Message.TIMEOUT)
         {
+            Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId());
             processNACK(msg);
         }
         else if (msg.getDataType() == Message.IN_PROGRESS) {

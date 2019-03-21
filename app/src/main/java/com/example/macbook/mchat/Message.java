@@ -95,7 +95,7 @@ public class Message implements Serializable {
     public Message(Packet packet, int messageType, int msgStatus) {
         body = new String(packet.getContent());
         contactId = new String(packet.getAddress());
-        dataType = getDataType();
+        dataType = packet.getDataType();
         timestamp = ByteBuffer.wrap(packet.getTimestamp()).getInt();
         type = messageType;
         status = msgStatus;
