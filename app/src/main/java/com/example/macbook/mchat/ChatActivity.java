@@ -43,7 +43,7 @@ public class ChatActivity extends MChatActivity {
         Point displaySize = getDisplaySize();
         mAdapter = new ChatAdapter(displaySize.x, displaySize.y);
 
-        mRecyclerView = findViewById(R.id.reyclerview_message_list);
+        mRecyclerView = findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
