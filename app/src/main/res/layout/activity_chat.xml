@@ -7,6 +7,8 @@
         android:layout_height="match_parent"
         tools:context=".ChatActivity">
 
+    <include layout="@layout/toolbar" />
+
     <android.support.v7.widget.RecyclerView
             android:id="@+id/reyclerview_message_list"
             android:layout_width="match_parent"
@@ -16,10 +18,63 @@
             android:layout_marginBottom="48dp">
     </android.support.v7.widget.RecyclerView>
 
+    <ImageView
+            android:id="@+id/picture_message_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="240dp"
+            android:padding="8dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginLeft="8dp" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="2px"
+            android:background="#dfdfdf"
+            android:layout_marginBottom="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/layout_picture"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+    <!--
+        // Use a recycler view of images, should also include a button to delete an image
+        // For now just add another view row that shows ("# image was attached") show size of image, and X button to delete images from being sent
+    -->
+    <LinearLayout
+            android:id="@+id/layout_picture"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#ffffff"
+            android:padding="5dp"
+            android:layout_marginBottom="2px"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/layout_chatbox"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent">
+        <TextView
+            android:id="@+id/textview_picture"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="# images attached"
+            android:layout_marginLeft="16dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginRight="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/layout_chatbox"/>
+        <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/button_picture_remove"
+                android:src="@drawable/ic_close_red_24dp"
+                android:clickable="true"
+                android:background="?attr/selectableItemBackground"
+                android:layout_width="36dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"/>
+    </LinearLayout>
+
     <!-- A horizontal line between the chatbox and RecyclerView -->
     <View
-            android:layout_width="0dp"
-            android:layout_height="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="2px"
             android:background="#dfdfdf"
             android:layout_marginBottom="0dp"
             app:layout_constraintBottom_toTopOf="@+id/layout_chatbox"
@@ -33,6 +88,7 @@
             android:orientation="horizontal"
             android:minHeight="48dp"
             android:background="#ffffff"
+            android:padding="3dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintLeft_toLeftOf="parent">
@@ -49,16 +105,25 @@
                 android:layout_height="wrap_content"
                 android:maxLines="6"/>
 
+        <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/button_picture"
+                android:src="@drawable/ic_image_black_24dp"
+                android:clickable="true"
+                android:background="?attr/selectableItemBackground"
+                android:layout_width="56dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"/>
+
         <Button
                 android:id="@+id/button_chatbox_send"
                 android:text="SEND"
+                android:textColor="@color/white"
                 android:textSize="14dp"
-                android:background="?attr/selectableItemBackground"
+                android:background="@drawable/rounded_rectangle_orange"
                 android:clickable="true"
-                android:layout_width="64dp"
-                android:layout_height="48dp"
-                android:gravity="center"
-                android:layout_gravity="bottom"/>
+                android:layout_width="56dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"/>
 
         <!-- TODO: remove this button -->
         <Button
@@ -67,8 +132,8 @@
                 android:textSize="14dp"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
-                android:layout_width="64dp"
-                android:layout_height="48dp"
+                android:layout_width="56dp"
+                android:layout_height="32dp"
                 android:gravity="center"
                 android:layout_gravity="bottom"/>
 
