@@ -1,7 +1,11 @@
 package com.example.macbook.mchat;
 
 import android.content.*;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,9 +15,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
 import android.widget.*;
 import android.view.View;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +31,7 @@ public class ChatActivity extends MChatActivity {
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
     private String contactId;
-    private ArrayList<Bitmap> mPictures = new ArrayList<Bitmap>();
+    private ArrayList<String> mPictures = new ArrayList<String>();
 
     private final static int GALLERY = 1;
 
@@ -41,9 +49,13 @@ public class ChatActivity extends MChatActivity {
         // TODO remove initial messageList
         ArrayList<Message> messageList =  new ArrayList<Message>();
 
+        Display display = getWindowManager().getDefaultDisplay();
+        Point displaySize = new Point();
+        display.getSize(displaySize);
+
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
         // TODO update user list
-        mAdapter = new ChatAdapter(messageList, "Gordon");
+        mAdapter = new ChatAdapter(displaySize.x, displaySize.y);
 
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -57,9 +69,14 @@ public class ChatActivity extends MChatActivity {
                 String message = editText.getText().toString();
 
                 // TODO use file path for images
-                for (Bitmap image : mPictures) {
-                    sendPictureMessage(image);
+                for (String imageFilePath : mPictures) {
+                    sendPictureMessage(imageFilePath);
                 }
+
+                mPictures.clear();
+                findViewById(R.id.layout_picture).setVisibility(View.GONE);
+                TextView pictureText = findViewById(R.id.textview_picture);
+                pictureText.setText(mPictures.size() + " images attached");
 
                 if (!message.isEmpty()) {
                     sendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
@@ -102,11 +119,38 @@ public class ChatActivity extends MChatActivity {
 
                 // Enable this to test broadcast notification
                 Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                Message message = new Message("TESTING 123", contactId, Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis());
+                Message message = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", contactId, Message.IS_RECEIVE, Message.PICTURE, System.currentTimeMillis());
                 broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
                 sendBroadcast(broadcastTestIntent);
             }
         });
+
+//        try {
+//            Display display = getWindowManager().getDefaultDisplay();
+//            Point size = new Point();
+//            display.getSize(size);
+//            ImageView imageView = (ImageView) findViewById(R.id.picture_message_body);
+//            Uri mUri = Uri.fromFile(new File("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg"));
+//            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mUri);
+//            bitmap = getThumbnail(bitmap, size.x / 2, size.y / 2);
+//            int byteCount = bitmap.getByteCount();
+//            imageView.setImageBitmap(bitmap);
+//            imageView.setOnClickListener(new View.OnClickListener() {
+//                public void onClick(View v) {
+//                    Log.d(TAG, "TEST BUTTON CLICKED");
+//
+//                    // Enable this to test startNetworkRegistration
+//                    //mBluetoothService.startNetworkRegistration();
+//                    Uri mUri = Uri.fromFile(new File("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg"));
+//                    // Enable this to test broadcast notification
+//                    Intent intent = new Intent(getApplicationContext(), FullImageViewActivity.class);
+//                    startActivity(intent);
+//                }
+//            });
+//        } catch(Exception ex) {
+//            Log.d(TAG, ex.getMessage());
+//        }
+
     }
 
     private boolean sendMessage(final Message msg) {
@@ -135,32 +179,32 @@ public class ChatActivity extends MChatActivity {
         return true;
     }
 
-    private boolean sendPictureMessage(final Bitmap image) {
+    private boolean sendPictureMessage(final String imageFilePath) {
         int currentSize = mAdapter.getItemCount();
 
         // TODO show image as view
         // How to do this and make it an intent to show image when clicked
-        final Message msg = new Message("An image was sent", contactId, Message.IS_SEND, Message.PICTURE);
+        final Message msg = new Message(imageFilePath, contactId, Message.IS_SEND, Message.PICTURE);
         // Update UI
         mAdapter.addMessage(msg);
         mAdapter.notifyItemInserted(currentSize);
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
         // TODO store image correctly (use file path)
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Inserting stored sent message");
-                AppDatabase.getInstance().messageDao().insert(msg);
-            }
-        });
-
-        if (mBluetoothService.send(msg)) {
-            Log.d(TAG, "Message successfully sent");
-        } else {
-            Log.e(TAG, "Message failed to send");
-            return false;
-        }
+//        AsyncTask.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.d(TAG, "Inserting stored sent message");
+//                AppDatabase.getInstance().messageDao().insert(msg);
+//            }
+//        });
+//
+//        if (mBluetoothService.send(msg)) {
+//            Log.d(TAG, "Message successfully sent");
+//        } else {
+//            Log.e(TAG, "Message failed to send");
+//            return false;
+//        }
 
         return true;
     }
@@ -207,10 +251,10 @@ public class ChatActivity extends MChatActivity {
             if (data != null) {
                 Uri contentURI = data.getData();
                 try {
-                    String filePath =contentURI.getPath();
+                    String filePath = getPath(contentURI);
                     // TODO Store the path instead?
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                    mPictures.add(bitmap);
+                    //Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
+                    mPictures.add(filePath);
                     findViewById(R.id.layout_picture).setVisibility(View.VISIBLE);
 
                     TextView pictureText = findViewById(R.id.textview_picture);
@@ -222,12 +266,55 @@ public class ChatActivity extends MChatActivity {
                     }
                     pictureText.setText(mPictures.size() + " image attached");
 
-                } catch (IOException e) { //IOException
+                } catch (Exception e) { //IOException
                     Log.e(TAG, "Error getting image");
                 }
             }
 
         }
+    }
+
+    private Bitmap getThumbnail(Bitmap image, float maxWidth, float maxHeight) {
+        float width = image.getWidth();
+        float height = image.getHeight();
+        float ratio = width/height;
+
+        if (width >= height) {
+            if (width > maxWidth) {
+                width = maxWidth;
+                height = maxWidth / ratio;
+            }
+        }
+        else {
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = maxHeight * ratio;
+            }
+        }
+
+        return ThumbnailUtils.extractThumbnail(image, (int)width, (int)height);
+    }
+
+    private String getPath(Uri uri) {
+        // just some safety built in
+        if( uri == null ) {
+            // TODO perform some logging or show user feedback
+            return null;
+        }
+        // try to retrieve the image from the media store first
+        // this will only work for images selected from gallery
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        if( cursor != null ){
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String path = cursor.getString(column_index);
+            cursor.close();
+            return path;
+        }
+        // this is our fallback here
+        return uri.getPath();
     }
 
     private class GetMessagesTask extends AsyncTask<Void, Void, List<Message>>
