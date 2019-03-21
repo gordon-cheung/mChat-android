@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
@@ -125,21 +126,16 @@ public class ChatAdapter extends RecyclerView.Adapter {
             mMessageBody = itemView.findViewById(R.id.picture_message_body);
         }
 
-        void bind(Message message) {
+        void bind(final Message message) {
             try {
                 mMessageBody.setImageBitmap(getImage(message.getBody()));
-                //            imageView.setOnClickListener(new View.OnClickListener() {
-//                public void onClick(View v) {
-//                    Log.d(TAG, "TEST BUTTON CLICKED");
-//
-//                    // Enable this to test startNetworkRegistration
-//                    //mBluetoothService.startNetworkRegistration();
-//                    Uri mUri = Uri.fromFile(new File("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg"));
-//                    // Enable this to test broadcast notification
-//                    Intent intent = new Intent(getApplicationContext(), FullImageViewActivity.class);
-//                    startActivity(intent);
-//                }
-//            });
+                mMessageBody.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);
+                        intent.putExtra(AppNotification.IMAGE_DATA, message.getBody());
+                        MChatApplication.getAppContext().startActivity(intent);
+                    }
+                });
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
             }
@@ -167,9 +163,16 @@ public class ChatAdapter extends RecyclerView.Adapter {
             mMessageBody = itemView.findViewById(R.id.picture_message_body);
         }
 
-        void bind(Message message) {
+        void bind(final Message message) {
             try {
                 mMessageBody.setImageBitmap(getImage(message.getBody()));
+                mMessageBody.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);
+                        intent.putExtra(AppNotification.IMAGE_DATA, message.getBody());
+                        MChatApplication.getAppContext().startActivity(intent);
+                    }
+                });
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
             }

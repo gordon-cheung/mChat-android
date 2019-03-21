@@ -144,11 +144,11 @@ public class ChatActivity extends MChatActivity {
         });
 
         // TODO handle messages failed to send
-        if (mBluetoothService.send(msg)) {
-            Log.d(TAG, "Message successfully sent");
-        } else {
-            Log.e(TAG, "Message failed to send");
-        }
+//        if (mBluetoothService.send(msg)) {
+//            Log.d(TAG, "Message successfully sent");
+//        } else {
+//            Log.e(TAG, "Message failed to send");
+//        }
         return true;
     }
 
