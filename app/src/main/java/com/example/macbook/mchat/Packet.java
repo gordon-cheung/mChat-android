@@ -35,7 +35,7 @@ public class Packet {
     private byte length;
     private byte[] address;
     private byte dataType;
-    private byte msgId;
+    private byte[] msgId;
     private byte[] timestamp;
     private byte[] content;
 
@@ -43,10 +43,10 @@ public class Packet {
         this.length = pkt[0];
         this.address = new byte[] {pkt[1], pkt[2], pkt[3], pkt[4], pkt[5], pkt[6], pkt[7], pkt[8], pkt[9], pkt[10]};
         this.dataType = pkt[11];
-        this.msgId = pkt[12];
-        this.timestamp = new byte[] {pkt[13], pkt[14], pkt[15], pkt[16]};
+        this.msgId = new byte[] {pkt[12], pkt[13]};
+        this.timestamp = new byte[] {pkt[14], pkt[15], pkt[16], pkt[17]};
 
-        int headerLength = 17;
+        int headerLength = 18;
         int packetLength = headerLength + (int)this.length;
 
         try {
@@ -56,7 +56,7 @@ public class Packet {
             }
             this.content = contentStream.toByteArray();
         } catch (ArrayIndexOutOfBoundsException ex) {
-            Log.e(TAG, "Packet byte size does not match total length (17 " + this.length);
+            Log.e(TAG, "Packet byte size does not match total length (18 " + this.length);
         }
     }
 
@@ -68,10 +68,10 @@ public class Packet {
         }
 
         this.address = formattedNumber.getBytes();
-        this.dataType = (byte)msg.getDataType();
-
-        // TODO  update msg id
-        this.msgId = 0x00;
+        this.dataType = (byte) msg.getDataType();
+        this.msgId = new byte[2];
+        this.msgId[1] =  (byte)(msg.getMsgId() & 0xFF);
+        this.msgId[0] = (byte)((msg.getMsgId() >> 8) & 0xFF);
 
         // TODO  change Timestamp in  message class to use System.currentTimeMillis, store as long
         int dateInSec = (int) (msg.getTimestamp() / 1000);
@@ -99,7 +99,7 @@ public class Packet {
         System.out.println("Length: " + ByteUtilities.getByteInHexString(length));
         System.out.println("Address: " + ByteUtilities.getByteArrayInHexString((address)));
         System.out.println("DataType: " + ByteUtilities.getByteInHexString(dataType));
-        System.out.println("MsgId: " + ByteUtilities.getByteInHexString(msgId));
+        System.out.println("MsgId: " + ByteUtilities.getByteArrayInHexString(msgId));
         System.out.println("Timestamp: " + ByteUtilities.getByteArrayInHexString((timestamp)));
         System.out.println("Content: " + ByteUtilities.getByteArrayInHexString((content)));
     }
@@ -113,7 +113,9 @@ public class Packet {
     public byte getDataType() {
         return this.dataType;
     }
-    public byte getMsgId() { return this.msgId; }
+    public int getMsgId() {
+        return ((this.msgId[0] & 0xff) << 8) | (this.msgId[1] & 0xff);
+    }
     public byte[] getContent() {
         return this.content;
     }
@@ -137,17 +139,12 @@ public class Packet {
         return outputStream.toByteArray();
     }
 
-    public Message getMessage() {
-        String messageBody = new String(getContent());
-        String contactId = new String(getAddress());
-        int dataType = (int)getDataType();
-        long timestamp = ByteBuffer.wrap(getTimestamp()).getInt();
-        // TODO: Message.MESSAGE_RECEIVED depends
-        Message message = new Message(messageBody, contactId, Message.IS_RECEIVE, dataType, timestamp);
-        System.out.println("\nMessage");
-        message.printMessage();
+    public void setDataType(byte dataType) {
+        this.dataType = dataType;
+    }
 
-        return message;
+    public void setContent(byte[] content) {
+        this.content = content;
     }
 
     // TODO test this

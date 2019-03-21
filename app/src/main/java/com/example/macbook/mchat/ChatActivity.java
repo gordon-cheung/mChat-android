@@ -22,12 +22,21 @@ public class ChatActivity extends MChatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
+    static int mMsgId = 0;
 
     // TODO Aggregate Contact to this class
     private String contactId;
     private ArrayList<String> mPictures = new ArrayList<String>();
 
     private final static int GALLERY = 1;
+
+    static int incrementMessageId() {
+        mMsgId++;
+        if (mMsgId >= 65536){
+            mMsgId = 0;
+        }
+        return mMsgId;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +69,14 @@ public class ChatActivity extends MChatActivity {
                 String message = editText.getText().toString();
 
                 for (String imageFilePath : mPictures) {
-                    final Message msg = new Message(imageFilePath, contactId, Message.IS_SEND, Message.PICTURE);
+                    final Message msg = new Message(imageFilePath, contactId, Message.IS_SEND, Message.PICTURE, incrementMessageId());
                     sendMessage(msg);
                 }
 
                 clearImages();
 
                 if (!message.isEmpty()) {
-                    sendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT));
+                    sendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT, incrementMessageId()));
                     editText.setText("");
                 }
             }
@@ -141,11 +150,11 @@ public class ChatActivity extends MChatActivity {
         });
 
         // TODO handle messages failed to send
-//        if (mBluetoothService.send(msg)) {
-//            Log.d(TAG, "Message successfully sent");
-//        } else {
-//            Log.e(TAG, "Message failed to send");
-//        }
+        if (mBluetoothService.send(msg)) {
+            Log.d(TAG, "Message successfully sent");
+        } else {
+            Log.e(TAG, "Message failed to send");
+        }
         return true;
     }
 
@@ -157,14 +166,6 @@ public class ChatActivity extends MChatActivity {
         mAdapter.notifyItemInserted(currentSize);
 
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
-
-//        AsyncTask.execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d(TAG, "Inserting stored received message");
-//                mAppDatabase.messageDao().insert(msg);
-//            }
-//        });
 
         return true;
     }

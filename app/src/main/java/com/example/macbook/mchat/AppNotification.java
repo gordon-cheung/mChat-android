@@ -8,7 +8,8 @@ public final class AppNotification {
 
     // Intent name and intent extra key name for messages received over BLE
     public static String MESSAGE_RECEIVED_NOTIFICATION = "MESSAGE_RECEIVED";
-
+    public static String ACK_RECEIVED_NOTIFICATION = "ACK_RECEIVED";
+    public static String MESSAGE_FAILED_NOTIFICATION = "MESSAGED_FAILED";
     // BLUETOOTH STATUS
     public final static String ACTION_GATT_DEVICE_SELECTED = "ACTION_GATT_DEVICE_SELECTED";
     public final static String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";

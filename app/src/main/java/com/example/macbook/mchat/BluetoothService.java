@@ -8,6 +8,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.os.AsyncTask;
 
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
@@ -140,8 +141,8 @@ public class BluetoothService extends Service {
     // TODO
     private void startNetworkRegistration() {
         Log.d(TAG, "Sending network registration packet");
-        Message networkRegMsg = new Message("5551234567", Message.STATE_INIT);
-        //TODO Read ACK and show it isconnece doto the base
+        Message networkRegMsg = new Message("", "5551234567", Message.IS_SEND, Message.STATE_INIT, ChatActivity.incrementMessageId());
+        //TODO Read ACK and show it is connected to the base
         send(networkRegMsg);
     }
 
@@ -170,34 +171,17 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "WriteCharacteristic failed");
             }
         } catch (Exception ex) {
-
         }
-
-        return success;
-    }
-
-    private boolean writeCharacteristic(byte[] data) {
-        boolean success = false;
-        try {
-            nordicUARTGattCharacteristicTX.setValue(data);
-            Log.d(TAG, "WriteCharcteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
-            success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
-
-            if (!success) {
-                Log.d(TAG, "WriteCharacteristic failed");
-            }
-        } catch (Exception ex) {
-
-        }
-
         return success;
     }
 
     public boolean send(Message message) {
-        if (message.getDataType() == Message.TEXT) {
+        if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
+            PacketQueue.writeNewPacket(packet);
             Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-            return writeCharacteristic(packet.getBytes());
+            PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            return true;
         } else if (message.getDataType() == Message.PICTURE) {
             // TODO test this
 //                for (Packet packet : packets) {
@@ -207,43 +191,93 @@ public class BluetoothService extends Service {
 //                    }
 //                }
         }
-
         return false;
     }
 
-    // TODO
     public void receive(byte[] data) {
         Log.d(TAG, "RECEIVED RAW BYTES: " + ByteUtilities.getByteArrayInHexString(data));
         Packet packet = new Packet(data);
 
         Log.d(TAG, "Encoded RAW BYTES to PACKET");
         packet.printPacket();
+        Message msg = new Message(packet, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
 
-//        Message msg = packet.getMessage();
-//        if (msg.getDataType() == Message.STATE_IN_PROGRESS) {
-//            // Broadcast Notification
-//            Toast.makeText(mContext, mContacts.get(position).getName(), Toast.LENGTH_SHORT).show();
-//        }
-
-        //final Message message = packet.getMessage();
-
-        // TODO need to handle ACKs not just messages
-//        AsyncTask.execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d(TAG, "Inserting stored received message");
-//                AppDatabase.getInstance().messageDao().insert(message);
-//            }
-//        });
-
-        // TODO create static broadcast ids
-//        final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-//        intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
-//        Log.d(TAG, "Broadcasting intent: " + "MESSAGE_RECEIVED");
-//        sendBroadcast(intent);
+        // Data received
+        if (msg.getDataType() == Message.TEXT)
+        {
+            saveMsg(msg);
+            broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+        }
+        else if (msg.getDataType() == Message.PICTURE) //TODO
+        {
+        }
+        // Handle NACKs
+        else if (msg.getDataType() == Message.BUFFER_FULL || msg.getDataType() == Message.TIMEOUT)
+        {
+            processNACK(msg);
+        }
+        else if (msg.getDataType() == Message.IN_PROGRESS) {
+            updateMessageStatus(msg, Message.IN_PROGRESS);
+        }
+        // Handle ACK
+        else if (msg.getDataType() == Message.SENT) {
+            // Broadcast Notification
+            updateMessageStatus(msg, Message.STATUS_SENT);
+            broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
+        }
+        else { // (msg.getDataType() == Message.ERROR) {
+            updateMessageStatus(msg, Message.STATUS_FAILED);
+            broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
+        }
     }
 
-//    // Initialize bluetooth
+    private void broadcastMsg(final Message msg, final String notificationId) {
+        final Intent intent = new Intent(notificationId);
+        intent.putExtra(notificationId, msg);
+        Log.d(TAG, "Broadcasting intent: " + notificationId);
+        sendBroadcast(intent);
+    }
+
+    private void saveMsg(final Message msg) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Inserting stored received message");
+                AppDatabase.getInstance().messageDao().insert(msg);
+            }
+        });
+    }
+
+    private void processNACK(final Message msg) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                int msgId = msg.getMsgId();
+                String phoneNum = msg.getContactId();
+                List<Message> content = AppDatabase.getInstance().messageDao().getAll(phoneNum, msgId, Message.STATUS_PENDING);
+                if (content.size() == 0) {
+                    Log.d(TAG, "Error, not found! MsgId:" + msgId + " PhoneNum: " + phoneNum);
+                }
+                else {
+                    Packet failedPacket = new Packet(content.get(0));
+                    PacketQueue.writeFailedPacket(failedPacket);
+                    PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                }
+            }
+        });
+    }
+
+    private void updateMessageStatus(final Message msg, final int status) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Updating message to status: " + status);
+                AppDatabase.getInstance().messageDao().updateStatus(msg.getContactId(), msg.getMsgId(), status);
+            }
+        });
+    }
+
+//  Initialize bluetooth
     public boolean initialize() {
         Log.d(TAG, "Initialize Bluetooth Service");
         if (mBluetoothManager == null) {
