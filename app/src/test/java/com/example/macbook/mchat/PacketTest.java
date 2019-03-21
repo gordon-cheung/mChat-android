@@ -1,9 +1,13 @@
 package com.example.macbook.mchat;
 
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PacketTest {
     @Test
@@ -42,5 +46,40 @@ public class PacketTest {
 
         Packet packet = new Packet(outputStream.toByteArray());
         packet.printPacket();
+    }
+
+    @Test
+    public void PictureMessageToPacketsTest() {
+        Message msg = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", "5551234567", Message.IS_SEND, Message.PICTURE);
+
+        int size = 732;
+        byte[] arr = new byte[size];
+        for (int i=0; i<732;i++) {
+            arr[i] = (byte)i;
+        }
+
+        ArrayList<Packet> pkts = Packet.encodeImage(msg, arr);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            for (Packet p : pkts) {
+                System.out.println("");
+                p.printPacket();
+                System.out.println("Length of content: " + p.getContent().length);
+                System.out.println("Length of packet: " + p.getBytes().length);
+                stream.write(p.getContent());
+            }
+        } catch(Exception ex) {
+
+        }
+
+        byte[] finalArr = stream.toByteArray();
+        System.out.println("");
+        System.out.println("Original byte array");
+        System.out.println(ByteUtilities.getByteArrayInHexString(arr));
+        System.out.println("Reconstructed byte array");
+        System.out.println(ByteUtilities.getByteArrayInHexString(finalArr));
+
+        boolean result = Arrays.equals(finalArr, arr);
+        System.out.println(result ? "Matches" : "Does not match");
     }
 }

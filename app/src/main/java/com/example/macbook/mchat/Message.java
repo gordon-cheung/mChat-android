@@ -149,20 +149,4 @@ public class Message implements Serializable {
         System.out.println("Body: " + body);
         System.out.println("Timestamp: " + timestamp);
     }
-
-    // TODO  Custom exception
-    public byte[] getImageBytes() throws Exception {
-        if (this.getDataType() == Message.PICTURE) {
-            Bitmap image = BitmapFactory.decodeFile(this.body);
-
-            // Apply image compression algorithm
-
-            ByteBuffer byteBuffer = ByteBuffer.allocate(image.getByteCount());
-            image.copyPixelsToBuffer(byteBuffer);
-            return byteBuffer.array();
-        }
-
-        throw new Exception("Message is not an image");
-    }
-
 }

@@ -1,10 +1,19 @@
 package com.example.macbook.mchat;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.ImageView;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class Packet {
@@ -19,7 +28,8 @@ public class Packet {
 
     public static final int HEADER_LENGTH = 17;
 
-    public static final int MAX_CONTENT_SIZE = 244;
+    public static final int MAX_PACKET_SIZE = 244;
+    public static final int MAX_CONTENT_SIZE = MAX_PACKET_SIZE - HEADER_LENGTH;
 
 
     private byte length;
@@ -67,13 +77,13 @@ public class Packet {
         int dateInSec = (int) (msg.getTimestamp() / 1000);
 
         this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();
-        this.content = msg.getBody().getBytes();
-
-        this.length = (byte)(content.length);
 
         // Get Epoch Time
         int dateInSec2 = ByteBuffer.wrap(this.timestamp).getInt();
         System.out.println("EPOCH: " + dateInSec2);
+
+        this.content = msg.getBody().getBytes();
+        this.length = (byte)(content.length);
     }
 
     public Packet(Message msg, byte[] content) {
@@ -138,5 +148,53 @@ public class Packet {
         message.printMessage();
 
         return message;
+    }
+
+    // TODO test this
+    public static ArrayList<Packet> constructPackets(Message msg) throws IOException {
+        ArrayList<Packet> packets = new ArrayList<>();
+        if (msg.getDataType() == Message.PICTURE) {
+            try {
+                Uri imageUri = Uri.fromFile(new File(msg.getBody()));
+                Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
+
+                // Apply image compression algorithm here
+
+                int size = image.getByteCount();
+                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                image.copyPixelsToBuffer(byteBuffer);
+                byte[] byteArray = byteBuffer.array();
+
+                packets.addAll(encodeImage(msg, byteArray));
+
+            } catch (IOException ex) {
+                Log.e(TAG, ex.getMessage());
+                throw ex;
+            }
+        }
+
+        // TODO remove this after testing
+        for (Packet p : packets) {
+            p.printPacket();
+        }
+
+        return packets;
+    }
+
+    public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
+        ArrayList<Packet> packets = new ArrayList<>();
+        int size = image.length;
+        for (int i = 0; i < size; i += MAX_CONTENT_SIZE) {
+            if (i + Packet.MAX_CONTENT_SIZE < size) {
+                byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.MAX_CONTENT_SIZE);
+                packets.add(new Packet(msg, buffer));
+            }
+            else {
+                byte[] buffer = Arrays.copyOfRange(image, i, size);
+                packets.add(new Packet(msg, buffer));
+            }
+        }
+
+        return packets;
     }
 }

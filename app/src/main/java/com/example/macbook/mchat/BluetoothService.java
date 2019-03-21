@@ -200,36 +200,12 @@ public class BluetoothService extends Service {
             return writeCharacteristic(packet.getBytes());
         } else if (message.getDataType() == Message.PICTURE) {
             // TODO test this
-            try {
-                byte[] imageBytes = message.getImageBytes();
-                ArrayList<Packet> packets = new ArrayList<>();
-                for (int i = 0; i < imageBytes.length; i += Packet.MAX_CONTENT_SIZE) {
-                    if (i + Packet.MAX_CONTENT_SIZE < imageBytes.length) {
-                        byte[] buffer = Arrays.copyOfRange(imageBytes, i, i + Packet.MAX_CONTENT_SIZE);
-                        packets.add(new Packet(message, buffer));
-                    }
-                    else {
-                        byte[] buffer =Arrays.copyOfRange(imageBytes, i, i + imageBytes.length);
-                        packets.add(new Packet(message, buffer));
-                    }
-                }
-
-                // TODO remove this after testing
-                for (Packet p : packets) {
-                    p.printPacket();
-                }
-
 //                for (Packet packet : packets) {
 //                    // TODO handle what happens when image was failed to be sent for one packet
 //                    if (!writeCharacteristic(packet.getBytes())) {
 //                        return false;
 //                    }
 //                }
-                return true;
-            } catch(Exception ex) {
-                Log.e(TAG, ex.getMessage());
-                return false;
-            }
         }
 
         return false;
