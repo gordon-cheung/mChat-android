@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class PacketTest {
     @Test
     public void messageToPacketTest() {
-        Message msg = new Message("I am going to see coffee girl", "555-555-5555", 1, 1);
+        Message msg = new Message("I am going to see coffee girl", "555-555-5555", Message.IS_SEND,Message.TEXT, 0);
         Packet packet = new Packet(msg);
         packet.printPacket();
     }
@@ -25,11 +25,11 @@ public class PacketTest {
 
         byte[] address = phoneNumber.getBytes();
         byte[] dataType = new byte[] {0x01};
-        byte[] msgId = new byte[] {0x01};
+        byte[] msgId = new byte[] {0x00, 0x01};
         byte[] timestampByte = ByteBuffer.allocate(4).putInt(currentTime).array();
         byte[] contentByte = content.getBytes();
 
-        int size = address.length + dataType.length + msgId.length + timestampByte.length + contentByte.length;
+        int size = contentByte.length;
         byte[] sizeByte = new byte[] {(byte)size};
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -50,7 +50,7 @@ public class PacketTest {
 
     @Test
     public void PictureMessageToPacketsTest() {
-        Message msg = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", "5551234567", Message.IS_SEND, Message.PICTURE);
+        Message msg = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
 
         int size = 732;
         byte[] arr = new byte[size];
