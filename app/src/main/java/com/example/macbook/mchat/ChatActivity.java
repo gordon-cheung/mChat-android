@@ -2,9 +2,7 @@ package com.example.macbook.mchat;
 
 import android.content.*;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -20,7 +18,6 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO Cleanup Chat activity
 public class ChatActivity extends MChatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
@@ -55,7 +52,7 @@ public class ChatActivity extends MChatActivity {
         Point displaySize = getDisplaySize();
         mAdapter = new ChatAdapter(displaySize.x, displaySize.y);
 
-        mRecyclerView = findViewById(R.id.reyclerview_message_list);
+        mRecyclerView = findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -219,7 +216,7 @@ public class ChatActivity extends MChatActivity {
         // try to retrieve the image from the media store first
         // this will only work for images selected from gallery
         String[] projection = { MediaStore.Images.Media.DATA };
-        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
         if( cursor != null ){
             int column_index = cursor
                     .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
