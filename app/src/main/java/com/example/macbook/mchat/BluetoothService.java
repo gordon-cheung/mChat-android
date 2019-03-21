@@ -9,13 +9,9 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
-
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URLEncoder;
-import java.nio.Buffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
