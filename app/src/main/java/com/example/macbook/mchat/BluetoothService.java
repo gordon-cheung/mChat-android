@@ -176,7 +176,7 @@ public class BluetoothService extends Service {
     }
 
     public boolean send(Message message) {
-        if (message.getDataType() == Message.TEXT) {
+        if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
             PacketQueue.writeNewPacket(packet);
             Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));

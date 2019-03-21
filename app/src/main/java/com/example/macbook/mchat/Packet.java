@@ -59,6 +59,7 @@ public class Packet {
 
         this.address = formattedNumber.getBytes();
         this.dataType = (byte) msg.getDataType();
+        this.msgId = new byte[2];
         this.msgId[1] =  (byte)(msg.getMsgId() & 0xFF);
         this.msgId[0] = (byte)((msg.getMsgId() >> 8) & 0xFF);
 

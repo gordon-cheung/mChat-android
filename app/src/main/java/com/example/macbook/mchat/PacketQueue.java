@@ -35,12 +35,12 @@ public class PacketQueue {
 
     public static void write(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
-        if (writingData == false && m_NewMsgQueue.size() > 0 && m_FailedMsgQueue.size() > 0)
+        if (writingData == false && (m_NewMsgQueue.size() > 0 || m_FailedMsgQueue.size() > 0))
         {
             writingData = true;
             WriteTimer task = new WriteTimer(characteristic, gatt, m_FailedMsgQueue.size());
             Timer timer = new Timer(true);
-            timer.schedule(task, WriteTimer.CurrentInterval);
+            timer.schedule(task, 0);
         }
     }
 
