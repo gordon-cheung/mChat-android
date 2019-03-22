@@ -50,6 +50,7 @@ public class BluetoothService extends Service {
     private BluetoothGatt mBluetoothGatt;
     private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
     private BluetoothDevice mCurrentDevice = null;
+    static boolean NETWORK_REGISTRATION_COMPLETE = false;
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -139,7 +140,6 @@ public class BluetoothService extends Service {
     private void startNetworkRegistration() {
         Log.d(TAG, "Sending network registration packet");
         Message networkRegMsg = new Message("", "5551234567", Message.IS_SEND, Message.STATE_INIT, ChatActivity.incrementMessageId());
-        //TODO Read ACK and show it is connected to the base
         send(networkRegMsg);
     }
 
@@ -161,7 +161,7 @@ public class BluetoothService extends Service {
         if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
             PacketQueue.writeNewPacket(packet);
-            Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+            Log.d("TAG", "Queuing packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
             PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
@@ -169,7 +169,7 @@ public class BluetoothService extends Service {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
                     PacketQueue.writeNewPacket(pkt);
-                    Log.d("TAG", "Sending packet over BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                    Log.d("TAG", "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                     PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 }
             } catch (IOException ex) {
@@ -189,32 +189,33 @@ public class BluetoothService extends Service {
         packet.printPacket();
         Message msg = new Message(packet, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
 
-        // Data received
-        if (msg.getDataType() == Message.TEXT)
-        {
-            saveMsg(msg);
-            broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-        }
-        else if (msg.getDataType() == Message.PICTURE) //TODO
-        {
-        }
-        // Handle NACKs
-        else if (msg.getDataType() == Message.BUFFER_FULL || msg.getDataType() == Message.TIMEOUT)
-        {
-            Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
-        }
-        else if (msg.getDataType() == Message.IN_PROGRESS) {
-            //updateMessageStatus(msg, Message.STATUS_PENDING);
-        }
-        // Handle ACK
-        else if (msg.getDataType() == Message.SENT) {
-            // Broadcast Notification
-            updateMessageStatus(msg, Message.STATUS_SENT);
-            broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
-        }
-        else { // (msg.getDataType() == Message.ERROR) {
-            updateMessageStatus(msg, Message.STATUS_FAILED);
-            broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
+        int type = msg.getDataType();
+        switch(type){
+            case Message.TEXT:
+                saveMsg(msg);
+                broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                break;
+            case Message.PICTURE: //TODO
+                break;
+            case Message.BUFFER_FULL:
+            case Message.TIMEOUT:
+                Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
+                break;
+            case Message.STARTUP_COMPLETE:
+                NETWORK_REGISTRATION_COMPLETE = true;
+                break;
+            case Message.IN_PROGRESS:
+                break;
+            case Message.SENT:
+                updateMessageStatus(msg, Message.STATUS_SENT);
+                broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
+                break;
+            case Message.ERROR:
+                updateMessageStatus(msg, Message.STATUS_FAILED);
+                broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
+            default:
+                Log.d(TAG, "Invalid packet type received, contactId: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
+                break;
         }
     }
 

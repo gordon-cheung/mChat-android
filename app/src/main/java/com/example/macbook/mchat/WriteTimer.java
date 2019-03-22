@@ -39,26 +39,45 @@ public class WriteTimer extends TimerTask {
         return success;
     }
 
+    private void rerunTimer()
+    {
+        WriteTimer task = new WriteTimer(m_BluetoothCharacteristic, m_BluetoothGatt);
+        Timer timer = new Timer(true);
+        timer.schedule(task, CurrentInterval);
+    }
+
+    private void writePacket(byte[] data)
+    {
+        if (writeCharacteristic(data)) {
+            m_PacketQueue.remove();
+            if (m_PacketQueue.size() > 0) {
+                rerunTimer();
+            }
+        } else {
+            Log.d(TAG, "Error: Failed to write new packet");
+            PacketQueue.writingData = false;
+        }
+    }
+
     @Override
     public void run(){
         if (PacketQueue.writingData == false && m_PacketQueue.size() > 0)
         {
             PacketQueue.writingData = true;
-            Log.d(TAG, "Queue Size: " + m_PacketQueue.size() + " Content: " + new String(m_PacketQueue.peek().getContent()));
-            byte[] data = m_PacketQueue.peek().getBytes();
-            if (writeCharacteristic(data))
-            {
-                m_PacketQueue.remove();
-                if (m_PacketQueue.size() > 0)
+            Packet packet = m_PacketQueue.peek();
+            Log.d(TAG, "Queue Size: " + m_PacketQueue.size() + " Content: " + new String(packet.getContent()));
+            byte[] data = packet.getBytes();
+            if (packet.getDataType() == Message.TEXT || packet.getDataType() == Message.PICTURE) {
+                if (BluetoothService.NETWORK_REGISTRATION_COMPLETE) {
+                    writePacket(data);
+                }
+                else //Network registration not complete, try again later
                 {
-                    WriteTimer task = new WriteTimer(m_BluetoothCharacteristic, m_BluetoothGatt);
-                    Timer timer = new Timer(true);
-                    timer.schedule(task, CurrentInterval);
+                    rerunTimer();
                 }
             }
-            else
-            {
-                Log.d(TAG, "Error: Failed to write new packet");
+            else {
+                writePacket(data);
             }
         }
         else
