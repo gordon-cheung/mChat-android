@@ -1,9 +1,14 @@
 package com.example.macbook.mchat;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.*;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.MenuRes;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.ActionMenuItemView;
 import android.util.Log;
@@ -157,4 +162,31 @@ public abstract class MChatActivity extends AppCompatActivity {
     }
 
     protected abstract void onAppNotificationReceived(Intent intent);
+
+    protected void getPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = new String[] {
+                Manifest.permission.READ_CONTACTS,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            };
+            requestPermissions(permissions, 1);
+        }
+}
+
+    protected boolean isPermissionGranted(String permission)  {
+        return (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    protected void showErrorDialog(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message)
+            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    finish();
+                    moveTaskToBack(true);
+                }
+            })
+            .show();
+    }
 }
