@@ -136,10 +136,9 @@ public class BluetoothService extends Service {
         }
     }
 
-    // TODO
     private void startNetworkRegistration() {
         Log.d(TAG, "Sending network registration packet");
-        Message networkRegMsg = new Message("", "5551234567", Message.IS_SEND, Message.STATE_INIT, ChatActivity.incrementMessageId());
+        Message networkRegMsg = new Message("", MChatActivity.PHONE_NUMBER, Message.IS_SEND, Message.STATE_INIT, ChatActivity.incrementMessageId());
         send(networkRegMsg);
     }
 

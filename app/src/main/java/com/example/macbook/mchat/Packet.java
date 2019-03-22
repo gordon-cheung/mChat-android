@@ -65,11 +65,7 @@ public class Packet {
     }
 
     public Packet(Message msg) {
-        String formattedNumber = msg.getContactId().replaceAll("[^\\d.]", "");
-        if (formattedNumber.length() > 10) {
-            Log.d(TAG, "Phone number is too long: " + formattedNumber);
-            formattedNumber = formattedNumber.substring(formattedNumber.length() - 10);
-        }
+        String formattedNumber = Contact.formatPhoneNumber(msg.getContactId());
 
         this.address = formattedNumber.getBytes();
         this.dataType = (byte) msg.getDataType();

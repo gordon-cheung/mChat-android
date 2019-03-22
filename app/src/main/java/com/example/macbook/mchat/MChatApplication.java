@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.telephony.TelephonyManager;
 
 import java.lang.reflect.Array;
 
@@ -17,6 +18,7 @@ public class MChatApplication extends Application {
 
         Intent bluetoothServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
         startService(bluetoothServiceIntent);
+
     }
 
     public static Context getAppContext() {

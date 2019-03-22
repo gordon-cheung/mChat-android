@@ -11,6 +11,7 @@ import android.support.annotation.MenuRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.ActionMenuItemView;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,7 +19,7 @@ import android.widget.Toast;
 
 public abstract class MChatActivity extends AppCompatActivity {
     private String TAG = MChatActivity.class.getSimpleName();
-
+    static String PHONE_NUMBER = null;
     protected BluetoothService mBluetoothService;
     private Menu mOptionsMenu;
 
@@ -43,9 +44,21 @@ public abstract class MChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Intent gattServiceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+        Context context = getApplicationContext();
+        Intent gattServiceIntent = new Intent(context, BluetoothService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        if (PHONE_NUMBER == null && isPermissionGranted(Manifest.permission.READ_PHONE_STATE)) {
+            try {
+                TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                PHONE_NUMBER = Contact.formatPhoneNumber(tMgr.getLine1Number());
+                Log.d(TAG, "Number fetched from phone: " + PHONE_NUMBER);
+            } catch (SecurityException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
+        else {
+            getPermissions();
+        }
     }
 
     private final BroadcastReceiver appNotificationReceiver = new BroadcastReceiver() {
@@ -168,7 +181,8 @@ public abstract class MChatActivity extends AppCompatActivity {
             String[] permissions = new String[] {
                 Manifest.permission.READ_CONTACTS,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.READ_EXTERNAL_STORAGE
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_PHONE_STATE
             };
             requestPermissions(permissions, 1);
         }

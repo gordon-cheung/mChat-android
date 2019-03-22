@@ -12,11 +12,7 @@ public class Contact implements Serializable {
 
     public Contact(String name, String phoneNumber, String image) {
         this.name = name;
-        String formattedNumber = phoneNumber.replaceAll("[^\\d.]", "");
-        if (formattedNumber.length() > 10) {
-            Log.d(TAG, "Phone number is too long: " + formattedNumber);
-            formattedNumber = formattedNumber.substring(formattedNumber.length() - 10);
-        }
+        String formattedNumber = formatPhoneNumber(phoneNumber);
         this.phoneNumber = formattedNumber;
         this.image = image;
     }
@@ -35,7 +31,10 @@ public class Contact implements Serializable {
 
     public static String formatPhoneNumber(String contact) {
         if (contact != null) {
-            contact = contact.replaceAll("[+\\- \\(\\)]", "");
+            contact = contact.replaceAll("[^\\d.]", "");
+        }
+        if (contact.length() > 10) {
+            return contact.substring(contact.length() - 10);
         }
         return contact;
     }
