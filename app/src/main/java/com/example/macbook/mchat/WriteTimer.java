@@ -73,6 +73,7 @@ public class WriteTimer extends TimerTask {
                 }
                 else //Network registration not complete, try again later
                 {
+                    Log.d(TAG, "Waiting for network registration to complete...");
                     rerunTimer();
                 }
             }
