@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -125,26 +126,27 @@ public class SelectDeviceActivity extends MChatActivity {
     }
 
     private void scan() {
-        Log.d(TAG, "Starting scan");
-        isScanning = true;
-        mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        mBluetoothScanner.startScan(scanCallback);
-        updateScanMenuItem();
+        if (isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            Log.d(TAG, "Starting scan");
+            isScanning = true;
+            mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            mBluetoothScanner.startScan(scanCallback);
+            updateScanMenuItem();
 
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run() {
-            if (isScanning) {
-                stopScan();
-            }
-            }
-        }, 10000);
-
-        // TODO
-        // java.lang.SecurityException: Need ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION permission to get scan results
-        // occurs if location is not enabled, tell user of this error
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable()
+            {
+                @Override
+                public void run() {
+                    if (isScanning) {
+                        stopScan();
+                    }
+                }
+            }, 10000);
+        }
+        else {
+            getPermissions();
+        }
     }
 
     private void stopScan() {
@@ -157,10 +159,7 @@ public class SelectDeviceActivity extends MChatActivity {
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanFailed(int errorCode) {
-            // TODO
-            // java.lang.SecurityException: Need ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION permission to get scan results
-            // occurs if location is not enabled, tell user of this error
-            // is this called for this?
+            Log.e(TAG, "Scan failed");
         }
 
         @Override

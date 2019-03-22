@@ -178,13 +178,15 @@ public abstract class MChatActivity extends AppCompatActivity {
         return (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED);
     }
 
-    protected void showErrorDialog(String message) {
+    protected void showErrorDialog(String message, final boolean closeApp) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    finish();
-                    moveTaskToBack(true);
+                    if (closeApp) {
+                        finish();
+                        moveTaskToBack(true);
+                    }
                 }
             })
             .show();

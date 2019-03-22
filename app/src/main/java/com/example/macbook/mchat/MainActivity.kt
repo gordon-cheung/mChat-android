@@ -17,8 +17,6 @@ class MainActivity : MChatActivity() {
     private var mAdapter: ConversationRecyclerAdapter? = null
     private var mAppDatabase: AppDatabase? = null
 
-    // TODO: on navigated to pull from database (not just onCreate)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

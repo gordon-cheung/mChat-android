@@ -55,7 +55,7 @@ public class SelectContactActivity extends MChatActivity {
                 getContactList();
             } else {
                 Log.e(TAG, "Access to contacts is required for this application. MChat will now close.");
-                showErrorDialog("Access to contacts is required for this application. MChat will now close.");
+                showErrorDialog("Access to contacts is required for this application. MChat will now close.", true);
             }
         }
     }
