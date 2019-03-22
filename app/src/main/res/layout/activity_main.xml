@@ -9,64 +9,23 @@
         android:orientation="vertical">
 
     <include layout="@layout/toolbar" />
-    <!--<Button-->
-    <!--android:text="Refresh"-->
-    <!--android:layout_width="0dp"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:id="@+id/refreshButton" android:layout_marginBottom="32dp"-->
-    <!--app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"-->
-    <!--android:layout_marginStart="96dp" app:layout_constraintEnd_toEndOf="parent"-->
-    <!--android:layout_marginEnd="96dp"/>-->
-    <!--<TextView-->
-    <!--android:text="Disconnected"-->
-    <!--android:layout_width="wrap_content"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:id="@+id/textView" app:layout_constraintStart_toStartOf="parent"-->
-    <!--android:layout_marginStart="24dp" android:layout_marginBottom="8dp"-->
-    <!--app:layout_constraintBottom_toTopOf="@+id/refreshButton" app:layout_constraintEnd_toEndOf="parent"-->
-    <!--android:layout_marginEnd="24dp"/>-->
-    <!--<View-->
-    <!--android:id="@+id/divider"-->
-    <!--android:layout_width="368dp"-->
-    <!--android:layout_height="1dp"-->
-    <!--android:background="?android:attr/listDivider"-->
-    <!--tools:layout_editor_absoluteX="22dp" app:layout_constraintBottom_toTopOf="@+id/textView"-->
-    <!--/>-->
-    <!--<ListView-->
-    <!--android:layout_width="0dp"-->
-    <!--android:layout_height="0dp"-->
-    <!--android:layout_marginBottom="8dp"-->
-    <!--app:layout_constraintBottom_toBottomOf="@+id/divider" app:layout_constraintEnd_toEndOf="parent"-->
-    <!--app:layout_constraintStart_toStartOf="parent"-->
-    <!--android:id="@+id/selectDeviceList"-->
-    <!--app:layout_constraintHorizontal_bias="0.518"-->
-    <!--app:layout_constraintTop_toBottomOf="@+id/newMessageButton"/>-->
+
     <Button
             android:id="@+id/newMessageButton"
             android:paddingLeft="100dp"
             android:paddingRight="100dp"
             android:singleLine="true"
+            android:background="@drawable/rectangle_border"
             android:drawableLeft="@drawable/ic_create_black_24dp"
             android:text="New Message"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_weight="1"/>
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
     <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerview_conversation_list"
+            android:background="@color/white"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_height="match_parent">
     </android.support.v7.widget.RecyclerView>
-    <Button
-            android:id="@+id/bluetoothButton"
-            android:text="Bluetooth"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_weight="1"/>
-    <Button
-            android:id="@+id/testButton"
-            android:text="TEST"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_weight="1"/>
 </LinearLayout>

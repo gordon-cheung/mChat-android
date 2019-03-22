@@ -1,25 +1,37 @@
 package com.example.macbook.mchat;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.ImageView;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class Packet {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
 
-    // TODO update packet constructor to fit this
-    private static final int LENGTH_INDEX = 0;
-    //private static final int ADDRESS_INDEX = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
-    private static final int DATA_TYPE_INDEX = 11;
-    private static final int MSG_ID_INDEX =12;
-    //private static final int TIMESTAMP_INDEX = 13,14,15,16;
+    private static final int PACKET_LENGTH_INDEX = 0;
+    private static final int PACKET_ADDRESS_INDEX = 1;
+    private static final int PACKET_ADDRESS_LENGTH = 10;
+    private static final int PACKET_DATA_TYPE_INDEX = 11;
+    private static final int PACKET_MSG_ID_INDEX = 12;
+    private static final int PACKET_MSG_ID_LENGTH = 2;
+    private static final int PACKET_TIMESTAMP_INDEX = 14;
+    private static final int PACKET_TIMESTAMP_LENGTH = 4;
 
-    public static final int HEADER_LENGTH = 17;
+    private static final int PACKET_HEADER_LENGTH = 18;
 
-    public static final int MAX_CONTENT_SIZE = 244;
+    private static final int PACKET_MAX_SIZE = 244;
+    public static final int PACKET_MAX_CONTENT_SIZE = PACKET_MAX_SIZE - PACKET_HEADER_LENGTH;
 
 
     private byte length;
@@ -30,18 +42,20 @@ public class Packet {
     private byte[] content;
 
     public Packet(byte[] pkt) {
-        this.length = pkt[0];
-        this.address = new byte[] {pkt[1], pkt[2], pkt[3], pkt[4], pkt[5], pkt[6], pkt[7], pkt[8], pkt[9], pkt[10]};
-        this.dataType = pkt[11];
-        this.msgId = new byte[] {pkt[12], pkt[13]};
-        this.timestamp = new byte[] {pkt[14], pkt[15], pkt[16], pkt[17]};
+        this.length = pkt[PACKET_LENGTH_INDEX];
+        this.address = new byte[PACKET_ADDRESS_LENGTH];
+        System.arraycopy(pkt, PACKET_ADDRESS_INDEX, this.address, 0, PACKET_ADDRESS_LENGTH);
+        this.dataType = pkt[PACKET_DATA_TYPE_INDEX];
+        this.msgId = new byte[PACKET_MSG_ID_LENGTH];
+        System.arraycopy(pkt, PACKET_MSG_ID_INDEX, this.msgId, 0, PACKET_MSG_ID_LENGTH);
+        this.timestamp = new byte[PACKET_TIMESTAMP_LENGTH];
+        System.arraycopy(pkt, PACKET_TIMESTAMP_INDEX, this.timestamp, 0, PACKET_TIMESTAMP_LENGTH);
 
-        int headerLength = 18;
-        int packetLength = headerLength + (int)this.length;
+        int packetLength = PACKET_HEADER_LENGTH + (int)this.length;
 
         try {
             ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
-            for (int i = headerLength; i < packetLength; i++) {
+            for (int i = PACKET_HEADER_LENGTH; i < packetLength; i++) {
                 contentStream.write(pkt[i]);
             }
             this.content = contentStream.toByteArray();
@@ -62,30 +76,19 @@ public class Packet {
         this.msgId = new byte[2];
         this.msgId[1] =  (byte)(msg.getMsgId() & 0xFF);
         this.msgId[0] = (byte)((msg.getMsgId() >> 8) & 0xFF);
-
-        // TODO  change Timestamp in  message class to use System.currentTimeMillis, store as long
         int dateInSec = (int) (msg.getTimestamp() / 1000);
-
         this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();
-        this.content = msg.getBody().getBytes();
-
-        this.length = (byte)(content.length);
-
-        // Get Epoch Time
-        int dateInSec2 = ByteBuffer.wrap(this.timestamp).getInt();
-        System.out.println("EPOCH: " + dateInSec2);
+        setContent(msg.getBody().getBytes());
     }
 
     public Packet(Message msg, byte[] content) {
         this(msg);
 
-        this.content = content;
-        this.length = (byte)content.length;
+        setContent(content);
     }
 
     public void printPacket() {
         System.out.println("Packet: " + ByteUtilities.getByteArrayInHexString(getBytes()));
-
         System.out.println("Length: " + ByteUtilities.getByteInHexString(length));
         System.out.println("Address: " + ByteUtilities.getByteArrayInHexString((address)));
         System.out.println("DataType: " + ByteUtilities.getByteInHexString(dataType));
@@ -122,18 +125,65 @@ public class Packet {
             outputStream.write(msgId);
             outputStream.write(timestamp);
             outputStream.write(content);
-        } catch(Exception ex) {
-
+        } catch(IOException ex) {
+            Log.e(TAG, ex.getMessage());
         }
-
         return outputStream.toByteArray();
     }
 
-    public void setDataType(byte dataType) {
-        this.dataType = dataType;
-    }
-
+    // TODO throw exception if packet length is too large
     public void setContent(byte[] content) {
         this.content = content;
+        this.length = (byte)content.length;
+        if (this.length > PACKET_MAX_CONTENT_SIZE) {
+            Log.e("TAG", "Content length is too large");
+        }
+    }
+
+    public static ArrayList<Packet> constructPackets(Message msg) throws IOException {
+        ArrayList<Packet> packets = new ArrayList<>();
+        if (msg.getDataType() == Message.PICTURE) {
+            try {
+                Uri imageUri = Uri.fromFile(new File(msg.getBody()));
+                Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
+
+                // Apply image compression algorithm here
+
+                int size = image.getByteCount();
+                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                image.copyPixelsToBuffer(byteBuffer);
+                byte[] byteArray = byteBuffer.array();
+
+                packets.addAll(encodeImage(msg, byteArray));
+
+            } catch (IOException ex) {
+                Log.e(TAG, ex.getMessage());
+                throw ex;
+            }
+        }
+
+        // TODO remove this after testing
+        for (Packet p : packets) {
+            p.printPacket();
+        }
+
+        return packets;
+    }
+
+    public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
+        ArrayList<Packet> packets = new ArrayList<>();
+        int size = image.length;
+        for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
+            if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
+                byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.PACKET_MAX_CONTENT_SIZE);
+                packets.add(new Packet(msg, buffer));
+            }
+            else {
+                byte[] buffer = Arrays.copyOfRange(image, i, size);
+                packets.add(new Packet(msg, buffer));
+            }
+        }
+
+        return packets;
     }
 }

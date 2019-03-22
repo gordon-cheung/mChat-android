@@ -1,16 +1,11 @@
 package com.example.macbook.mchat
 
-import android.Manifest
 import android.content.Intent
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.MenuItem
-import android.view.View
 import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.ArrayList
@@ -22,8 +17,6 @@ class MainActivity : MChatActivity() {
     private var mAdapter: ConversationRecyclerAdapter? = null
     private var mAppDatabase: AppDatabase? = null
 
-    // TODO: on navigated to pull from database (not just onCreate)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,7 +25,6 @@ class MainActivity : MChatActivity() {
         mAppDatabase = AppDatabase.getInstance(this)
 
         val messageList = ArrayList<Message>()
-//        messageList.add(Message("Hello how are you", "Bryson Ding", "Gordon"))
 
         mAdapter = ConversationRecyclerAdapter(this, messageList)
 
@@ -47,29 +39,6 @@ class MainActivity : MChatActivity() {
         }
 
         GetConversationTask().execute()
-
-        val connectBluetoothButton = findViewById<Button>(R.id.bluetoothButton)
-
-        connectBluetoothButton.setOnClickListener{
-            val intent = Intent (this, SelectDeviceActivity::class.java)
-            startActivity(intent)
-        }
-
-//        // TODO: Remove
-//        val testButton = findViewById<Button>(R.id.testButton)
-//        testButton.setOnClickListener(View.OnClickListener {
-//            Log.d(TAG, "TEST BUTTON CLICKED")
-//            val broadcastTestIntent = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-//            val message = Message("TESTING 123 in MAIN", "Aaron Gile", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
-//            broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message)
-//            sendBroadcast(broadcastTestIntent)
-//
-//            val broadcastTestIntent2 = Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION)
-//            val message2 = Message("TESTING 123 Bryson in MAIN", "Bryson Ding", Message.IS_RECEIVE, Message.TEXT, System.currentTimeMillis())
-//            broadcastTestIntent2.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message2)
-//            sendBroadcast(broadcastTestIntent2)
-//        })
-
         getPermissions()
     }
 
@@ -110,12 +79,5 @@ class MainActivity : MChatActivity() {
             }
         }
 
-    }
-
-    // Request for permission for contacts and location services (for contact and bluetooth)
-    private fun getPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_COARSE_LOCATION), 1)
-        }
     }
 }

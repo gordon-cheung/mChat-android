@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
 import android.graphics.Point;
@@ -11,6 +12,8 @@ import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Display;
 import android.widget.*;
@@ -58,10 +61,10 @@ public class ChatActivity extends MChatActivity {
 
         new GetMessagesTask().execute();
 
-        bindClickEvents();
+        bindEvents();
     }
 
-    private void bindClickEvents() {
+    private void bindEvents() {
         final Button sendButton = findViewById(R.id.button_chatbox_send);
         sendButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -85,8 +88,12 @@ public class ChatActivity extends MChatActivity {
         final ImageButton pictureButton = findViewById(R.id.button_picture);
         pictureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(galleryIntent, GALLERY);
+                if (isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(galleryIntent, GALLERY);
+                } else {
+                    getPermissions();
+                }
             }
         });
 
@@ -96,6 +103,28 @@ public class ChatActivity extends MChatActivity {
                 clearImages();
             }
         });
+
+        final EditText chatEditText = findViewById(R.id.edittext_chatbox);
+        final TextWatcher textWatcher  = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().getBytes().length > Packet.PACKET_MAX_CONTENT_SIZE)  {
+                    CharSequence tb = s.subSequence(0, Packet.PACKET_MAX_CONTENT_SIZE);
+                    chatEditText.removeTextChangedListener(this);
+                    chatEditText.setText(tb);
+                    chatEditText.setSelection(tb.length());
+                    chatEditText.addTextChangedListener(this);
+                    Toast.makeText(getApplicationContext(), "Maximum text message length reached", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        chatEditText.addTextChangedListener(textWatcher);
 
         // TODO: Remove
         final Button testButton = findViewById(R.id.button_chatbox_test);
@@ -241,6 +270,11 @@ public class ChatActivity extends MChatActivity {
             for (Message msg: messages) {
                 Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.getContactId(), msg.getBody()));
                 int currentSize = mAdapter.getItemCount();
+
+                if (!isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE) && msg.getDataType() == Message.PICTURE) {
+                    msg.setBody("Error: Unable to read image. Access to storage is required.");
+                    msg.setDataType(Message.TEXT);
+                }
 
                 mAdapter.addMessage(msg);
                 mAdapter.notifyItemInserted(currentSize);
