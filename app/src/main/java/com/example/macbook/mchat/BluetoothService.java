@@ -160,21 +160,6 @@ public class BluetoothService extends Service {
         }
     }
 
-    private boolean writeCharacteristic(String data) {
-        boolean success = false;
-        try {
-            nordicUARTGattCharacteristicTX.setValue(URLEncoder.encode(data, "utf-8"));
-            Log.d(TAG, "WriteCharacteristic(" + nordicUARTGattCharacteristicTX.getUuid() + ") Value: " + data);
-            success = mBluetoothGatt.writeCharacteristic(nordicUARTGattCharacteristicTX);
-
-            if (!success) {
-                Log.d(TAG, "WriteCharacteristic failed");
-            }
-        } catch (Exception ex) {
-        }
-        return success;
-    }
-
     public boolean send(Message message) {
         if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
@@ -239,7 +224,6 @@ public class BluetoothService extends Service {
         else if (msg.getDataType() == Message.BUFFER_FULL || msg.getDataType() == Message.TIMEOUT)
         {
             Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
-            processNACK(msg);
         }
         else if (msg.getDataType() == Message.IN_PROGRESS) {
             //updateMessageStatus(msg, Message.STATUS_PENDING);
@@ -269,25 +253,6 @@ public class BluetoothService extends Service {
             public void run() {
                 Log.d(TAG, "Inserting stored received message");
                 AppDatabase.getInstance().messageDao().insert(msg);
-            }
-        });
-    }
-
-    private void processNACK(final Message msg) {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                int msgId = msg.getMsgId();
-                String phoneNum = msg.getContactId();
-                List<Message> content = AppDatabase.getInstance().messageDao().getAll(phoneNum, msgId, Message.STATUS_PENDING);
-                if (content.size() == 0) {
-                    Log.d(TAG, "Error, not found! MsgId:" + msgId + " PhoneNum: " + phoneNum);
-                }
-                else {
-                    Packet failedPacket = new Packet(content.get(0));
-                    PacketQueue.writeFailedPacket(failedPacket);
-                    PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
-                }
             }
         });
     }

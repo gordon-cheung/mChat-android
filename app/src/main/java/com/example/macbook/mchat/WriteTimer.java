@@ -10,21 +10,16 @@ import java.util.Timer;
 
 public class WriteTimer extends TimerTask {
 
-    private Queue<Packet> m_FailedPacketQueue = PacketQueue.getFailedPacketQueue();
-    private Queue<Packet> m_NewPacketQueue = PacketQueue.getNewPacketQueue();
+    private Queue<Packet> m_PacketQueue = PacketQueue.getNewPacketQueue();
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
     private final static String TAG = WriteTimer.class.getSimpleName();
-    private final int MIN_INTERVAL = 1000;
-    private final int MAX_INTERVAL = 64000;
-    static int CurrentInterval = 1000;
-    private int m_NumFailedPackets;
+    final static int CurrentInterval = 1000;
 
-    public WriteTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt, int numFailedPackets)
+    public WriteTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
         m_BluetoothCharacteristic = characteristic;
         m_BluetoothGatt = gatt;
-        m_NumFailedPackets = numFailedPackets;
     }
 
     private boolean writeCharacteristic(byte[] data)
@@ -46,54 +41,30 @@ public class WriteTimer extends TimerTask {
 
     @Override
     public void run(){
-        if (m_FailedPacketQueue.size() > 0)
+        if (PacketQueue.writingData == false && m_PacketQueue.size() > 0)
         {
-            Log.d(TAG, "Failed Packet Q Size: " + m_FailedPacketQueue.size() + " Content: " + new String(m_FailedPacketQueue.peek().getContent()));
-            byte[] data = m_FailedPacketQueue.peek().getBytes();
+            PacketQueue.writingData = true;
+            Log.d(TAG, "Queue Size: " + m_PacketQueue.size() + " Content: " + new String(m_PacketQueue.peek().getContent()));
+            byte[] data = m_PacketQueue.peek().getBytes();
             if (writeCharacteristic(data))
             {
-                m_FailedPacketQueue.remove();
+                m_PacketQueue.remove();
+                if (m_PacketQueue.size() > 0)
+                {
+                    WriteTimer task = new WriteTimer(m_BluetoothCharacteristic, m_BluetoothGatt);
+                    Timer timer = new Timer(true);
+                    timer.schedule(task, CurrentInterval);
+                }
             }
             else
             {
-                Log.d(TAG, "Failed to write failed packet");
+                Log.d(TAG, "Error: Failed to write new packet");
             }
-        }
-        else
-        {
-            Log.d(TAG, "New Packet Q Size: " + m_NewPacketQueue.size() + " Content: " + new String(m_NewPacketQueue.peek().getContent()));
-            byte[] data = m_NewPacketQueue.peek().getBytes();
-            if (writeCharacteristic(data))
-            {
-                m_NewPacketQueue.remove();
-            }
-            else
-            {
-                Log.d(TAG, "Failed to write new packet");
-            }
-        }
-        if (m_FailedPacketQueue.size() > 0 || m_NewPacketQueue.size() > 0)
-        {
-            int numFailedPackets = m_FailedPacketQueue.size();
-            WriteTimer task = new WriteTimer(m_BluetoothCharacteristic, m_BluetoothGatt, numFailedPackets);
-            Timer timer = new Timer(true);
-            if (numFailedPackets > m_NumFailedPackets)
-            {
-                CurrentInterval = Math.min((CurrentInterval * 2), MAX_INTERVAL);
-                Log.d(TAG, "More failed packets detected, new interval: " + CurrentInterval);
-
-            }
-            else
-            {
-                CurrentInterval = Math.max((CurrentInterval / 2), MIN_INTERVAL);
-                Log.d(TAG, "Less failed packets detected, new interval: " + CurrentInterval);
-            }
-            timer.schedule(task, CurrentInterval);
         }
         else
         {
             PacketQueue.writingData = false;
-            Log.d(TAG, "No more packets detected in queues");
+            Log.d(TAG, "Error: No more packets detected in queues");
         }
     }
 }
