@@ -15,9 +15,9 @@ public class WriteTimer extends TimerTask {
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
     private final static String TAG = WriteTimer.class.getSimpleName();
-    private final int MIN_INTERVAL = 500;
+    private final int MIN_INTERVAL = 1000;
     private final int MAX_INTERVAL = 64000;
-    static int CurrentInterval = 500;
+    static int CurrentInterval = 1000;
     private int m_NumFailedPackets;
 
     public WriteTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt, int numFailedPackets)
@@ -48,18 +48,28 @@ public class WriteTimer extends TimerTask {
     public void run(){
         if (m_FailedPacketQueue.size() > 0)
         {
+            Log.d(TAG, "Failed Packet Q Size: " + m_FailedPacketQueue.size() + " Content: " + new String(m_FailedPacketQueue.peek().getContent()));
             byte[] data = m_FailedPacketQueue.peek().getBytes();
             if (writeCharacteristic(data))
             {
                 m_FailedPacketQueue.remove();
             }
+            else
+            {
+                Log.d(TAG, "Failed to write failed packet");
+            }
         }
         else
         {
+            Log.d(TAG, "New Packet Q Size: " + m_NewPacketQueue.size() + " Content: " + new String(m_NewPacketQueue.peek().getContent()));
             byte[] data = m_NewPacketQueue.peek().getBytes();
             if (writeCharacteristic(data))
             {
                 m_NewPacketQueue.remove();
+            }
+            else
+            {
+                Log.d(TAG, "Failed to write new packet");
             }
         }
         if (m_FailedPacketQueue.size() > 0 || m_NewPacketQueue.size() > 0)
@@ -83,6 +93,7 @@ public class WriteTimer extends TimerTask {
         else
         {
             PacketQueue.writingData = false;
+            Log.d(TAG, "No more packets detected in queues");
         }
     }
 }

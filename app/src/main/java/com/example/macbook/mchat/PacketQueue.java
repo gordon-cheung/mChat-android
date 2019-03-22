@@ -2,16 +2,20 @@ package com.example.macbook.mchat;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
 
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Timer;
+
+import static android.support.constraint.Constraints.TAG;
 
 public class PacketQueue {
 
     private static Queue<Packet> m_NewMsgQueue = new LinkedList<>();
     private static Queue<Packet> m_FailedMsgQueue = new LinkedList<>();
     static boolean writingData = false;
+    private final static String TAG = PacketQueue.class.getSimpleName();
 
     public static Queue<Packet> getNewPacketQueue()
     {
