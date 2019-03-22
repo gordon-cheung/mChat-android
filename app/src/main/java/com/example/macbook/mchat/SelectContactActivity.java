@@ -37,26 +37,25 @@ public class SelectContactActivity extends MChatActivity {
 
     private void getContactList() {
         Log.d(TAG, "Retrieving contacts");
-        try {
-            Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
-            while(phones.moveToNext()) {
-                String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                number = Contact.formatPhoneNumber(number);
-                if (!mPhoneNumbers.contains(number)) {
-                    mPhoneNumbers.add(number);
-                    mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+        if (isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
+            try {
+                Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+                while (phones.moveToNext()) {
+                    String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    number = Contact.formatPhoneNumber(number);
+                    if (!mPhoneNumbers.contains(number)) {
+                        mPhoneNumbers.add(number);
+                        mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+                    }
                 }
+            } catch (SecurityException ex) {
+                getPermissions();
             }
-        } catch(SecurityException ex) {
-            getPermissions();
-        } finally {
-            if (isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
-                getContactList();
-            } else {
-                Log.e(TAG, "Access to contacts is required for this application. MChat will now close.");
-                showErrorDialog("Access to contacts is required for this application. MChat will now close.", true);
-            }
+        }
+        else {
+            Log.e(TAG, "Access to contacts is required for this application. MChat will now close.");
+            showErrorDialog("Access to contacts is required for this application. MChat will now close.", true);
         }
     }
 
