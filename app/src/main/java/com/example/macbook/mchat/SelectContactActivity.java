@@ -1,14 +1,13 @@
 package com.example.macbook.mchat;
 
+import android.Manifest;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.content.Intent;
 
 import java.util.ArrayList;
@@ -38,14 +37,25 @@ public class SelectContactActivity extends MChatActivity {
 
     private void getContactList() {
         Log.d(TAG, "Retrieving contacts");
-        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
-        while(phones.moveToNext()) {
-            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-            String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            number = Contact.formatPhoneNumber(number);
-            if (!mPhoneNumbers.contains(number)) {
-                mPhoneNumbers.add(number);
-                mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+        try {
+            Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+            while(phones.moveToNext()) {
+                String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                number = Contact.formatPhoneNumber(number);
+                if (!mPhoneNumbers.contains(number)) {
+                    mPhoneNumbers.add(number);
+                    mContacts.add(new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg"));
+                }
+            }
+        } catch(SecurityException ex) {
+            getPermissions();
+        } finally {
+            if (isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
+                getContactList();
+            } else {
+                Log.e(TAG, "Access to contacts is required for this application. MChat will now close.");
+                showErrorDialog("Access to contacts is required for this application. MChat will now close.", true);
             }
         }
     }
