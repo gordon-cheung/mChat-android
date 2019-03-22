@@ -1,5 +1,6 @@
 package com.example.macbook.mchat;
 
+import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
 import android.graphics.Point;
@@ -87,8 +88,12 @@ public class ChatActivity extends MChatActivity {
         final ImageButton pictureButton = findViewById(R.id.button_picture);
         pictureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(galleryIntent, GALLERY);
+                if (isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(galleryIntent, GALLERY);
+                } else {
+                    getPermissions();
+                }
             }
         });
 
@@ -265,6 +270,11 @@ public class ChatActivity extends MChatActivity {
             for (Message msg: messages) {
                 Log.d(TAG, String.format("ContactId %s, MessageBody %s", msg.getContactId(), msg.getBody()));
                 int currentSize = mAdapter.getItemCount();
+
+                if (!isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE) && msg.getDataType() == Message.PICTURE) {
+                    msg.setBody("Error: Unable to read image. Access to storage is required.");
+                    msg.setDataType(Message.TEXT);
+                }
 
                 mAdapter.addMessage(msg);
                 mAdapter.notifyItemInserted(currentSize);
