@@ -31,7 +31,7 @@ public class Packet {
     private static final int PACKET_HEADER_LENGTH = 18;
 
     private static final int PACKET_MAX_SIZE = 244;
-    private static final int PACKET_MAX_CONTENT_SIZE = PACKET_MAX_SIZE - PACKET_HEADER_LENGTH;
+    public static final int PACKET_MAX_CONTENT_SIZE = PACKET_MAX_SIZE - PACKET_HEADER_LENGTH;
 
 
     private byte length;
@@ -78,15 +78,13 @@ public class Packet {
         this.msgId[0] = (byte)((msg.getMsgId() >> 8) & 0xFF);
         int dateInSec = (int) (msg.getTimestamp() / 1000);
         this.timestamp = ByteBuffer.allocate(4).putInt(dateInSec).array();
-        this.content = msg.getBody().getBytes();
-        this.length = (byte)(content.length);
+        setContent(msg.getBody().getBytes());
     }
 
     public Packet(Message msg, byte[] content) {
         this(msg);
 
-        this.content = content;
-        this.length = (byte)content.length;
+        setContent(content);
     }
 
     public void printPacket() {
@@ -133,9 +131,13 @@ public class Packet {
         return outputStream.toByteArray();
     }
 
+    // TODO throw exception if packet length is too large
     public void setContent(byte[] content) {
         this.content = content;
         this.length = (byte)content.length;
+        if (this.length > PACKET_MAX_CONTENT_SIZE) {
+            Log.e("TAG", "Content length is too large");
+        }
     }
 
     public static ArrayList<Packet> constructPackets(Message msg) throws IOException {
