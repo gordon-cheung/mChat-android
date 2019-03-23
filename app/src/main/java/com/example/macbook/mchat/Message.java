@@ -30,11 +30,12 @@ public class Message implements Serializable {
     public static final int PICTURE = 2;
     public static final int STARTUP_COMPLETE = 3;
     public static final int NOT_READY = 4;
-    public static final int IN_PROGRESS = 5;
+    public static final int ACK = 5;
     public static final int SENT = 6;
     public static final int ERROR = 7;
     public static final int BUFFER_FULL = 8;
     public static final int TIMEOUT = 9;
+    public static final int NACK = 10;
 
     @PrimaryKey(autoGenerate = true)
     private int id;

@@ -10,7 +10,7 @@ import java.util.Timer;
 
 public class WriteTimer extends TimerTask {
 
-    private Queue<Packet> m_PacketQueue = PacketQueue.getNewPacketQueue();
+    private Queue<Packet> m_PacketQueue = TransmissionQueue.getWriteQueue();
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
     private final static String TAG = WriteTimer.class.getSimpleName();
@@ -55,15 +55,15 @@ public class WriteTimer extends TimerTask {
             }
         } else {
             Log.d(TAG, "Error: Failed to write new packet");
-            PacketQueue.writingData = false;
+            TransmissionQueue.writingData = false;
         }
     }
 
     @Override
     public void run(){
-        if (PacketQueue.writingData == false && m_PacketQueue.size() > 0)
+        if (TransmissionQueue.writingData == false && m_PacketQueue.size() > 0)
         {
-            PacketQueue.writingData = true;
+            TransmissionQueue.writingData = true;
             Packet packet = m_PacketQueue.peek();
             Log.d(TAG, "Queue Size: " + m_PacketQueue.size() + " Content: " + new String(packet.getContent()));
             byte[] data = packet.getBytes();
@@ -83,7 +83,7 @@ public class WriteTimer extends TimerTask {
         }
         else
         {
-            PacketQueue.writingData = false;
+            TransmissionQueue.writingData = false;
             Log.d(TAG, "Error: No more packets detected in queues");
         }
     }

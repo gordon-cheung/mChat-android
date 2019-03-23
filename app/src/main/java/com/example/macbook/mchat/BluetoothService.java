@@ -10,7 +10,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -159,17 +158,15 @@ public class BluetoothService extends Service {
     public boolean send(Message message) {
         if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
-            PacketQueue.writeNewPacket(packet);
+            TransmissionQueue.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
             Log.d("TAG", "Queuing packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-            PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
-                    PacketQueue.writeNewPacket(pkt);
+                    TransmissionQueue.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                     Log.d("TAG", "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
-                    PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 }
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
@@ -196,22 +193,33 @@ public class BluetoothService extends Service {
                 break;
             case Message.PICTURE: //TODO
                 break;
+            case Message.NACK:
+                TransmissionQueue.nackReceived();
+                Log.d(TAG, "NACK received");
+                break;
             case Message.BUFFER_FULL:
             case Message.TIMEOUT:
-                Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
+                TransmissionQueue.txFailure();
+                Log.d(TAG, "Buffer full or timeout");
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
                 break;
-            case Message.IN_PROGRESS:
+            case Message.ACK:
+                TransmissionQueue.ackReceived();
+                Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
+                TransmissionQueue.txSuccess();
                 updateMessageStatus(msg, Message.STATUS_SENT);
                 broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
+                Log.d(TAG, "TX success notification");
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);
+                TransmissionQueue.txFailure();
                 broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
+                Log.d(TAG, "TX error notification");
             default:
                 Log.d(TAG, "Invalid packet type received, contactId: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
                 break;
