@@ -26,7 +26,6 @@ public class PacketQueue {
     {
         if (writingData == false && (m_NewMsgQueue.size() > 0))
         {
-            writingData = true;
             WriteTimer task = new WriteTimer(characteristic, gatt);
             Timer timer = new Timer(true);
             timer.schedule(task, 0);

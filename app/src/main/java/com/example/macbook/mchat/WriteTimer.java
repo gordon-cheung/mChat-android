@@ -53,6 +53,9 @@ public class WriteTimer extends TimerTask {
             if (m_PacketQueue.size() > 0) {
                 rerunTimer();
             }
+            else {
+                PacketQueue.writingData = false;
+            }
         } else {
             Log.d(TAG, "Error: Failed to write new packet");
             PacketQueue.writingData = false;
