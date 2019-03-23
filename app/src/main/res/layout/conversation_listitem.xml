@@ -23,6 +23,15 @@
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="10:23"
+            android:layout_toRightOf="@+id/contact_name"
+            android:id="@+id/conversation_time"
+            android:textColor="#000"
+            android:layout_marginLeft="115dp"
+            android:textSize="14sp"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Hello, how are you?"
             android:layout_toRightOf="@+id/image"
             android:id="@+id/conversation_message"

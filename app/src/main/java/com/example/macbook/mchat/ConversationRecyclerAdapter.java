@@ -12,8 +12,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import de.hdodenhof.circleimageview.CircleImageView;
-
 import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ConversationRecyclerAdapter extends RecyclerView.Adapter<ConversationRecyclerAdapter.ViewHolder> {
     private String TAG = ChatActivity.class.getSimpleName();
@@ -68,6 +70,12 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         // TODO use appdata user id
         String contactName = msg.getContactId();
         holder.contactName.setText(contactName);
+
+//        DateFormat dateFormat = new SimpleDateFormat("HH:mm");      // Consider both MM/dd and hh/ss in the future
+//        Date date = new Date();
+//        String convoTime = dateFormat.format(date);
+//        holder.conversationTime.setText(convoTime);
+
         holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,6 +100,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
     public class ViewHolder extends RecyclerView.ViewHolder{
         CircleImageView image;
         TextView contactName;
+        //TextView conversationTime;
         TextView conversationMessage;
         RelativeLayout parentLayout;
 
@@ -99,9 +108,9 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
             super(itemView);
             image = itemView.findViewById(R.id.image);
             contactName = itemView.findViewById(R.id.contact_name);
+            //conversationTime = itemView.findViewById(R.id.conversation_time);
             conversationMessage = itemView.findViewById(R.id.conversation_message);
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
-
     }
 }
