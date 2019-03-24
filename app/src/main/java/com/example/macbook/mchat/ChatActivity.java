@@ -3,6 +3,8 @@ package com.example.macbook.mchat;
 import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -18,6 +20,10 @@ import android.util.Log;
 import android.view.Display;
 import android.widget.*;
 import android.view.View;
+
+import java.io.*;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,14 +138,34 @@ public class ChatActivity extends MChatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                // Enable this to test startNetworkRegistration
-                //mBluetoothService.startNetworkRegistration();
+                try {
+                    BluetoothService bs = new BluetoothService();
+                    // TODO add code below to t est function to test
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, os);
 
-                // Enable this to test broadcast notification
-                Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                Message message = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", contactId, Message.IS_RECEIVE, Message.PICTURE, System.currentTimeMillis());
-                broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
-                sendBroadcast(broadcastTestIntent);
+                    Message message = new Message("Some Image", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
+                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
+                    os.close();
+                    for (Packet p : sentImagePackets) {
+                        bs.storeImagePacket(p);
+                        ArrayList<Packet> image = bs.detectImageReceived();
+                        if (image != null) {
+                            System.out.println("Image detected");
+                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                            for (Packet p2 : image) {
+                                outputStream.write(p2.getContent());
+                            }
+
+                            Bitmap bitmap2 = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
+                            String contentType2 = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
+                            System.out.println(contentType2);
+                        }
+                    }
+                } catch(IOException ex) {
+
+                }
             }
         });
     }

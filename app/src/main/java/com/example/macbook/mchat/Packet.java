@@ -166,18 +166,27 @@ public class Packet {
         return packets;
     }
 
+    // TODO increment message id
+    // TODO set datatype of last image packet to PICTURE_END
     public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
         ArrayList<Packet> packets = new ArrayList<>();
         int size = image.length;
+        int count = msg.getMsgId();
         for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
+            msg.setMsgId(count++);
             if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
+                if (i == 0) {
+                    msg.setDataType(Message.PICTURE_START);
+                }
                 byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.PACKET_MAX_CONTENT_SIZE);
                 packets.add(new Packet(msg, buffer));
             }
             else {
                 byte[] buffer = Arrays.copyOfRange(image, i, size);
+                msg.setDataType(Message.PICTURE_END);
                 packets.add(new Packet(msg, buffer));
             }
+            msg.setDataType(Message.PICTURE);
         }
 
         return packets;

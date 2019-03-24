@@ -4,13 +4,18 @@ import android.app.Service;
 import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URLEncoder;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -51,6 +56,8 @@ public class BluetoothService extends Service {
     private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
     private BluetoothDevice mCurrentDevice = null;
     static boolean NETWORK_REGISTRATION_COMPLETE = false;
+
+    private ArrayList<Packet> imageBuffer = new ArrayList<Packet>();
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -194,7 +201,23 @@ public class BluetoothService extends Service {
                 saveMsg(msg);
                 broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
                 break;
+            case Message.PICTURE_START:
+            case Message.PICTURE_END:
             case Message.PICTURE: //TODO
+                // store packet
+                storeImagePacket(packet);
+
+                // Detect if a full image was received
+                ArrayList<Packet> img = detectImageReceived();
+
+                if (img != null) {
+                    System.out.println("Image received");
+                    Bitmap bitmap = constructImage(img);
+
+                    if (bitmap != null) {
+                        //saveImage(bitmap);
+                    }
+                }
                 break;
             case Message.BUFFER_FULL:
             case Message.TIMEOUT:
@@ -217,6 +240,86 @@ public class BluetoothService extends Service {
                 break;
         }
     }
+
+    public void storeImagePacket(Packet pkt) {
+        for (int i = 0 ; i <= imageBuffer.size(); i++) {
+            if (i == imageBuffer.size()) {
+                imageBuffer.add(pkt);
+                break;
+            }
+            else if (imageBuffer.get(i).getMsgId() > pkt.getMsgId()) {
+                imageBuffer.add(i, pkt);
+                break;
+            }
+        }
+    }
+
+    public ArrayList<Packet> detectImageReceived() {
+        int startCountIndex = -1;
+        int currentMsgIdCounter = -1;
+        int endCountIndex = -1;
+        ArrayList<Packet> image = null;
+        for (int i = 0; i < imageBuffer.size(); i++) {
+            Packet currentPacket = imageBuffer.get(i);
+            if (currentPacket.getMsgId() == currentMsgIdCounter + 1 && startCountIndex != -1) {
+                currentMsgIdCounter++;
+            }
+            else {
+                currentMsgIdCounter = -1;
+                startCountIndex = -1;
+            }
+
+            if ((int)currentPacket.getDataType() == Message.PICTURE_START) {
+                startCountIndex = i;
+                currentMsgIdCounter = currentPacket.getMsgId();
+            }
+
+            if ((int)currentPacket.getDataType() == Message.PICTURE_END) {
+                if (startCountIndex != -1) {
+                    endCountIndex = i;
+                    image = new ArrayList<Packet>(imageBuffer.subList(startCountIndex, endCountIndex + 1));
+                    imageBuffer.subList(startCountIndex, endCountIndex + 1).clear();
+                    return image;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Bitmap constructImage(ArrayList<Packet> imgPkts) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (Packet p: imgPkts) {
+            try {
+                outputStream.write(p.getContent());
+            } catch (IOException ex) {
+                Log.e(TAG, ex.getMessage());
+            }
+        }
+
+        try {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
+            String contentType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
+            System.out.println(contentType);
+            return bitmap;
+        } catch(IOException ex) {
+            System.out.println(ex.getMessage());
+            return null;
+        }
+    }
+
+    // TODO
+//    private boolean saveImage(Bitmap bitmap) {
+//        //Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+//
+//        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "test_image1.jpg", "Test");
+//
+//        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+//        String contentType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
+//        System.out.println(contentType);
+//    }
 
     private void broadcastMsg(final Message msg, final String notificationId) {
         final Intent intent = new Intent(notificationId);
