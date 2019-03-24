@@ -138,34 +138,34 @@ public class ChatActivity extends MChatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                try {
-                    BluetoothService bs = new BluetoothService();
-                    // TODO add code below to t est function to test
-                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, os);
-
-                    Message message = new Message("Some Image", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
-                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
-                    os.close();
-                    for (Packet p : sentImagePackets) {
-                        bs.storeImagePacket(p);
-                        ArrayList<Packet> image = bs.detectImageReceived();
-                        if (image != null) {
-                            System.out.println("Image detected");
-                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                            for (Packet p2 : image) {
-                                outputStream.write(p2.getContent());
-                            }
-
-                            Bitmap bitmap2 = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
-                            String contentType2 = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
-                            System.out.println(contentType2);
-                        }
-                    }
-                } catch(IOException ex) {
-
-                }
+//                try {
+//                    BluetoothService bs = new BluetoothService();
+//                    // TODO add code below to t est function to test
+//                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+//                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, os);
+//
+//                    Message message = new Message("Some Image", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
+//                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
+//                    os.close();
+//                    for (Packet p : sentImagePackets) {
+//                        bs.storeImagePacket(p);
+//                        ArrayList<Packet> image = bs.detectImageReceived();
+//                        if (image != null) {
+//                            System.out.println("Image detected");
+//                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//                            for (Packet p2 : image) {
+//                                outputStream.write(p2.getContent());
+//                            }
+//
+//                            Bitmap bitmap2 = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
+//                            String contentType2 = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
+//                            System.out.println(contentType2);
+//                        }
+//                    }
+//                } catch(IOException ex) {
+//
+//                }
             }
         });
     }
