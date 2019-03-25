@@ -144,7 +144,7 @@ public class Packet {
                 Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
 
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
-                image.compress(Bitmap.CompressFormat.JPEG, 90, os);
+                image.compress(Bitmap.CompressFormat.JPEG, 10, os);
                 packets.addAll(encodeImage(msg, os.toByteArray()));
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
