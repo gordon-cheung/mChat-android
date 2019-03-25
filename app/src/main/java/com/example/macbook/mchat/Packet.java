@@ -143,24 +143,13 @@ public class Packet {
                 Uri imageUri = Uri.fromFile(new File(msg.getBody()));
                 Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
 
-                // Apply image compression algorithm here
-
-                int size = image.getByteCount();
-                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                image.copyPixelsToBuffer(byteBuffer);
-                byte[] byteArray = byteBuffer.array();
-
-                packets.addAll(encodeImage(msg, byteArray));
-
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                image.compress(Bitmap.CompressFormat.JPEG, 90, os);
+                packets.addAll(encodeImage(msg, os.toByteArray()));
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
                 throw ex;
             }
-        }
-
-        // TODO remove this after testing
-        for (Packet p : packets) {
-            p.printPacket();
         }
 
         return packets;
