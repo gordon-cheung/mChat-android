@@ -158,14 +158,14 @@ public class BluetoothService extends Service {
     public boolean send(Message message) {
         if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
             Packet packet = new Packet(message);
-            TransmissionQueue.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            Log.d("TAG", "Queuing packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+            TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            Log.d("TAG", "Queued packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
-                    TransmissionQueue.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                    TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                     Log.d("TAG", "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                 }
             } catch (IOException ex) {
@@ -194,30 +194,30 @@ public class BluetoothService extends Service {
             case Message.PICTURE: //TODO
                 break;
             case Message.NACK:
-                TransmissionQueue.nackReceived();
+                TransmissionManager.nackReceived(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 Log.d(TAG, "NACK received");
                 break;
             case Message.BUFFER_FULL:
             case Message.TIMEOUT:
-                TransmissionQueue.txFailure();
+                TransmissionManager.txFailure();
                 Log.d(TAG, "Buffer full or timeout");
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
                 break;
             case Message.ACK:
-                TransmissionQueue.ackReceived();
+                TransmissionManager.ackReceived(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
-                TransmissionQueue.txSuccess();
+                TransmissionManager.txSuccess();
                 updateMessageStatus(msg, Message.STATUS_SENT);
                 broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
                 Log.d(TAG, "TX success notification");
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);
-                TransmissionQueue.txFailure();
+                TransmissionManager.txFailure();
                 broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
                 Log.d(TAG, "TX error notification");
             default:

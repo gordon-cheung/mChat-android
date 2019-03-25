@@ -8,7 +8,7 @@ import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Timer;
 
-public class TransmissionQueue {
+public class TransmissionManager {
 
     private static Queue<Packet> m_PendingQueue = new LinkedList<>();
     private static Queue<Packet> m_SendingQueue = new LinkedList<>();
@@ -16,78 +16,49 @@ public class TransmissionQueue {
     static boolean waitingAck = false;
     static Timer m_Timer;
 
-    public static Queue<Packet> getWriteQueue()
-    {
-        return m_PendingQueue;
-    }
-
     public static void queuedWrite(Packet packet, BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
         m_PendingQueue.add(packet);
         write(characteristic, gatt);
     }
 
-    public static void ackReceived() {
-        if (m_SendingQueue.size() == 0) {
-            Log.d(TAG, "Error! Ack received but data queue is empty!");
+    public static void ackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        if (m_PendingQueue.size() == 0) {
+            Log.d(TAG, "Error! ACK received but pending queue is empty!");
         }
         else {
-            for (PacketStatus packet : m_SendingQueue) {
-                if (packet.getAckStatus() == false) {
-                    packet.setAckStatus(true);
-                    break;
-                }
-            }
+            Packet packet = m_PendingQueue.remove();
+            m_SendingQueue.add(packet);
+            waitingAck = false;
+            write(characteristic, gatt);
         }
     }
 
-    public static void nackReceived() {
-        if (m_SendingQueue.size() == 0) {
-            Log.d(TAG, "Error! Ack received but data queue is empty!");
+    public static void nackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        if (m_PendingQueue.size() == 0) {
+            Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
         else {
-            for (int i = 0; i < m_SendingQueue.size(); i++)
-            {
-                PacketStatus temp = m_SendingQueue.get(i);
-                if (temp.getAckStatus() == false) {
-                    m_SendingQueue.remove(i);
-                }
-                m_PendingQueue.add(temp.getPacket());
-                m_SendingQueue.add(temp);
-            }
+            write(characteristic, gatt);
         }
     }
 
     public static void txSuccess() {
         if (m_SendingQueue.size() == 0) {
-            Log.d(TAG, "Error! TX received but data queue is empty!");
+            Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
         else {
-            for (int i = 0; i < m_SendingQueue.size(); i++)
-            {
-                PacketStatus temp = m_SendingQueue.get(i);
-                if (temp.getAckStatus() == true) {
-                    m_SendingQueue.remove(i);
-                }
-            }
+            m_SendingQueue.remove();
         }
     }
 
     public static void txFailure() {
         if (m_SendingQueue.size() == 0) {
-            Log.d(TAG, "Error! TX received but data queue is empty!");
+            Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
         else {
-            for (int i = 0; i < m_SendingQueue.size(); i++)
-            {
-                PacketStatus temp = m_SendingQueue.get(i);
-                if (temp.getAckStatus() == true) {
-                    m_SendingQueue.remove(i);
-                }
-                m_PendingQueue.add(temp.getPacket());
-                temp.setAckStatus(false);
-                m_SendingQueue.add(temp);
-            }
+            Packet packet = m_SendingQueue.remove();
+            m_PendingQueue.add(packet);
         }
     }
 
@@ -95,9 +66,9 @@ public class TransmissionQueue {
     {
         boolean success = false;
         try {
-            m_BluetoothCharacteristic.setValue(data);
-            Log.d(TAG, "WriteCharacteristic(" + m_BluetoothCharacteristic.getUuid() + ") Value: " + data);
-            success = m_BluetoothGatt.writeCharacteristic(m_BluetoothCharacteristic);
+            characteristic.setValue(data);
+            Log.d(TAG, "WriteCharacteristic(" + characteristic.getUuid() + ") Value: " + data);
+            success = gatt.writeCharacteristic(characteristic);
 
             if (!success) {
                 Log.d(TAG, "WriteCharacteristic failed");
