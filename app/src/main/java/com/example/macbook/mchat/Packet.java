@@ -155,14 +155,13 @@ public class Packet {
         return packets;
     }
 
-    // TODO increment message id
-    // TODO set datatype of last image packet to PICTURE_END
+    // TODO Handle the case where image is only 1 packet
     public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
         ArrayList<Packet> packets = new ArrayList<>();
         int size = image.length;
         int count = msg.getMsgId();
         for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
-            msg.setMsgId(count++);
+            msg.setMsgId(ChatActivity.incrementMessageId());
             if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
                 if (i == 0) {
                     msg.setDataType(Message.PICTURE_START);

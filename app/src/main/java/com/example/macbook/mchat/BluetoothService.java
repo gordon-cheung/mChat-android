@@ -7,14 +7,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,11 +209,17 @@ public class BluetoothService extends Service {
                 ArrayList<Packet> img = detectImageReceived();
 
                 if (img != null) {
-                    System.out.println("Image received");
+                    Log.d(TAG, "Full image received");
                     Bitmap bitmap = constructImage(img);
 
                     if (bitmap != null) {
-                        //saveImage(bitmap);
+                        String url = saveImage(bitmap, msg);
+
+                        msg.setDataType(Message.PICTURE);
+                        msg.setBody(url);
+
+                        saveMsg(msg);
+                        broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
                     }
                 }
                 break;
@@ -300,26 +304,40 @@ public class BluetoothService extends Service {
         try {
             Bitmap bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
             String contentType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
-            System.out.println(contentType);
+            Log.d(TAG, "Constructed image of content type: " + contentType);
             return bitmap;
         } catch(IOException ex) {
-            System.out.println(ex.getMessage());
+            Log.e(TAG, ex.getMessage());
             return null;
         }
     }
 
-    // TODO
-//    private boolean saveImage(Bitmap bitmap) {
-//        //Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-//
-//        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "test_image1.jpg", "Test");
-//
-//        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-//        String contentType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
-//        System.out.println(contentType);
-//    }
+    // TODO testing png and jpg
+    public String saveImage(Bitmap bitmap, Message msg) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        File wallpaperDirectory = new File(
+                Environment.getExternalStorageDirectory() + "/mchat");
+        // have the object build the directory structure, if needed.
+        if (!wallpaperDirectory.exists()) {
+            wallpaperDirectory.mkdirs();
+        }
+
+        try {
+            String title = String.valueOf(System.currentTimeMillis()) + ".jpg";
+            File f = new File(wallpaperDirectory, title);
+            f.createNewFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            fo.close();
+            Log.d("TAG", "File Saved::---&gt;" + f.getAbsolutePath());
+
+            return f.getAbsolutePath();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return "";
+    }
 
     private void broadcastMsg(final Message msg, final String notificationId) {
         final Intent intent = new Intent(notificationId);
