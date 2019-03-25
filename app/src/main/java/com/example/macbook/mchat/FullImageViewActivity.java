@@ -1,17 +1,13 @@
 package com.example.macbook.mchat;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-
+import com.bumptech.glide.Glide;
 import java.io.File;
-import java.io.IOException;
 
 public class FullImageViewActivity extends MChatActivity {
     private String TAG = FullImageViewActivity.class.getSimpleName();
@@ -32,15 +28,9 @@ public class FullImageViewActivity extends MChatActivity {
 
         String path = getIntent().getExtras().getString(AppNotification.IMAGE_DATA);
 
-        try {
-            ImageView imageView = (ImageView) findViewById(R.id.fullScreenImageView);
-            Uri mUri = Uri.fromFile(new File(path));
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mUri);
-            imageView.setImageBitmap(bitmap);
-
-        } catch(IOException ex) {
-            Log.e(TAG, ex.getMessage());
-        }
+        ImageView imageView = (ImageView) findViewById(R.id.fullScreenImageView);
+        Uri mUri = Uri.fromFile(new File(path));
+        Glide.with(MChatApplication.getAppContext()).load(mUri).into(imageView);
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.example.macbook.mchat;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.media.ThumbnailUtils;
+import android.graphics.Point;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import android.view.LayoutInflater;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 public class ChatAdapter extends RecyclerView.Adapter {
     private final static int IS_SEND_TEXT = 1;
@@ -128,7 +130,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
         void bind(final Message message) {
             try {
-                mMessageBody.setImageBitmap(getImage(message.getBody()));
+                loadImage(mMessageBody, message.getBody());
                 mMessageBody.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);
@@ -165,7 +167,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
         void bind(final Message message) {
             try {
-                mMessageBody.setImageBitmap(getImage(message.getBody()));
+                loadImage(mMessageBody, message.getBody());
                 mMessageBody.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);
@@ -179,19 +181,20 @@ public class ChatAdapter extends RecyclerView.Adapter {
         }
     }
 
-    private Bitmap getImage(String filePath) throws IOException {
+    private void loadImage(ImageView view, String filePath) throws IOException {
         try {
             Uri uri = Uri.fromFile(new File(filePath));
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), uri);
-            bitmap = getThumbnail(bitmap, mDisplayWidth / 2, mDisplayHeight / 2);
-            return bitmap;
+            Point size = getThumbnailSize(bitmap, mDisplayWidth / 2, mDisplayHeight / 2);
+
+            Glide.with(MChatApplication.getAppContext()).load(bitmap).apply(new RequestOptions().override(size.x, size.y)).into(view);
         } catch (IOException ex) {
             Log.e(TAG, ex.getMessage());
             throw ex;
         }
     }
 
-    private Bitmap getThumbnail(Bitmap image, float maxWidth, float maxHeight) {
+    private Point getThumbnailSize(Bitmap image, float maxWidth, float maxHeight) {
         float width = image.getWidth();
         float height = image.getHeight();
         float ratio = width/height;
@@ -208,7 +211,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
                 width = maxHeight * ratio;
             }
         }
-        return ThumbnailUtils.extractThumbnail(image, (int)width, (int)height);
+        return new Point((int)width, (int)height);
     }
 
 }
