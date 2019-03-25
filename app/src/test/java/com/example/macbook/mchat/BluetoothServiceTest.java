@@ -13,70 +13,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 public class BluetoothServiceTest {
-    // Put this code in activity test?? or maybe use androidTest
-    @Test
-    public void ImageConstructionTest2() {
-//        BluetoothService bs = new BluetoothService();
-//        try {
-//
-//
-////            InputStream in = this.getClass().getClassLoader().getResourceAsStream("test_image1.jpg");
-////            String contentType = URLConnection.guessContentTypeFromStream(in);
-////            System.out.println(contentType);
-////
-////            ByteArrayOutputStream os = new ByteArrayOutputStream();
-////
-////            byte[] buffer = new byte[1024];
-////            int len;
-////
-////            // read bytes from the input stream and store them in buffer
-////            while ((len = in.read(buffer)) != -1) {
-////                // write bytes from the buffer into output stream
-////                os.write(buffer, 0, len);
-////            }
-//
-//            // TODO add code below to t est function to test
-//            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
-//            ByteArrayOutputStream os = new ByteArrayOutputStream();
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-//
-//            Message message = new Message("Some Image", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
-//            ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
-//            for (Packet p : sentImagePackets) {
-//                bs.storeImagePacket(p);
-//                ArrayList<Packet> image = bs.detectImageReceived();
-//                if (image != null) {
-//                    System.out.println("Image detected");
-//                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//                    for (Packet p2: image) {
-//                        try {
-//                            outputStream.write(p2.getContent());
-//                        } catch (IOException ex) {
-//
-//                        }
-//                    }
-//
-//                    try {
-//                        Bitmap bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
-//                        String contentType2 = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
-//                        System.out.println(contentType2);
-//                    } catch(IOException ex) {
-//                        System.out.println(ex.getMessage());
-//                    }
-//                }
-//            }
-//        } catch (IOException ex) {
-//
-//        }
-
-
-//        Bitmap bitmap = BitmapFactory.decodeByteArray(inputStream.)
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-//
-//        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "test_image1.jpg", "Test");
-    }
-
     @Test
     public void ImageConstructionTest() {
         int currentTime = (int) (System.currentTimeMillis() / 1000);
@@ -132,26 +68,26 @@ public class BluetoothServiceTest {
         bs.receive(packet4);
         bs.receive(packet3);
 
-        ArrayList<Packet> buffer = bs.getImageBuffer();
-        for (Packet p : buffer) {
-            System.out.println(p.getMsgId());
-        }
-
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("test_image1.jpg");
-        try {
-            String contentType = URLConnection.guessContentTypeFromStream(inputStream);
-            System.out.println(contentType);
-        } catch(IOException ex) {
-
-        }
-
-        InputStream inputStream2 = this.getClass().getClassLoader().getResourceAsStream("test_image2.png");
-        try {
-            String contentType = URLConnection.guessContentTypeFromStream(inputStream2);
-            System.out.println(contentType);
-        } catch(IOException ex) {
-
-        }
+//        ArrayList<Packet> buffer = bs.getImageBuffer();
+//        for (Packet p : buffer) {
+//            System.out.println(p.getMsgId());
+//        }
+//
+//        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("test_image1.jpg");
+//        try {
+//            String contentType = URLConnection.guessContentTypeFromStream(inputStream);
+//            System.out.println(contentType);
+//        } catch(IOException ex) {
+//
+//        }
+//
+//        InputStream inputStream2 = this.getClass().getClassLoader().getResourceAsStream("test_image2.png");
+//        try {
+//            String contentType = URLConnection.guessContentTypeFromStream(inputStream2);
+//            System.out.println(contentType);
+//        } catch(IOException ex) {
+//
+//        }
     }
 
     private byte[] getByteArray(byte[] length, byte[] address, byte[] dataType, byte[] msgId, byte[] timestamp, byte[] content) {
