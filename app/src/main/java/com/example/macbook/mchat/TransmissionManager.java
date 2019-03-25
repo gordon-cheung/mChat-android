@@ -36,6 +36,7 @@ public class TransmissionManager {
     }
 
     public static void nackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        m_Timer.cancel();
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
