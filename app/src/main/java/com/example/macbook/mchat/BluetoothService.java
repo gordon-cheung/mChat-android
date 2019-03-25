@@ -93,7 +93,7 @@ public class BluetoothService extends Service {
 
         @Override
         public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Log.d("TAG", "Descriptor write finished");
+            Log.d(TAG, "Descriptor write finished");
             startNetworkRegistration();
         }
     };
@@ -156,23 +156,26 @@ public class BluetoothService extends Service {
     }
 
     public boolean send(Message message) {
-        if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
+        if (message.getDataType() == Message.TEXT) {
             Packet packet = new Packet(message);
             TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            Log.d("TAG", "Queued packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+            Log.d(TAG, "Queued packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
                     TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-                    Log.d("TAG", "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                    Log.d(TAG, "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                 }
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
                 return false;
             }
             return true;
+        } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
+            Packet packet = new Packet(message);
+            TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
         }
         return false;
     }
@@ -181,7 +184,6 @@ public class BluetoothService extends Service {
         Log.d(TAG, "RECEIVED RAW BYTES: " + ByteUtilities.getByteArrayInHexString(data));
         Packet packet = new Packet(data);
 
-        Log.d(TAG, "Encoded RAW BYTES to PACKET");
         packet.printPacket();
         Message msg = new Message(packet, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
 
@@ -204,6 +206,7 @@ public class BluetoothService extends Service {
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
+                Log.d(TAG, "MLINK startup complete");
                 break;
             case Message.ACK:
                 TransmissionManager.ackReceived(nordicUARTGattCharacteristicTX, mBluetoothGatt);

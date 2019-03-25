@@ -14,7 +14,7 @@ public class TransmissionManager {
     private static Queue<Packet> m_SendingQueue = new LinkedList<>();
     private final static String TAG = PacketTimer.class.getSimpleName();
     static boolean waitingAck = false;
-    static Timer m_Timer;
+    static Timer m_Timer = null;
 
     public static void queuedWrite(Packet packet, BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
@@ -23,6 +23,7 @@ public class TransmissionManager {
     }
 
     public static void ackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        m_Timer.cancel();
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! ACK received but pending queue is empty!");
         }
@@ -86,6 +87,10 @@ public class TransmissionManager {
             waitingAck = true;
             writeCharacteristic(m_PendingQueue.peek().getBytes(), characteristic, gatt);
             PacketTimer task = new PacketTimer(characteristic, gatt);
+            if (m_Timer != null)
+            {
+                m_Timer.cancel();
+            }
             m_Timer = new Timer(true);
             m_Timer.schedule(task, PacketTimer.TIMEOUT_INTERVAL);
         }
