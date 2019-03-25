@@ -8,15 +8,15 @@ import java.util.Queue;
 import java.util.TimerTask;
 import java.util.Timer;
 
-public class WriteTimer extends TimerTask {
+public class PacketTimeout extends TimerTask {
 
     private Queue<Packet> m_PacketQueue = TransmissionQueue.getWriteQueue();
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
-    private final static String TAG = WriteTimer.class.getSimpleName();
-    final static int CurrentInterval = 1000;
+    private final static String TAG = PacketTimeout.class.getSimpleName();
+    final static int TIMEOUT_INTERVAL = 1000;
 
-    public WriteTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
+    public PacketTimeout(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
         m_BluetoothCharacteristic = characteristic;
         m_BluetoothGatt = gatt;
@@ -41,9 +41,9 @@ public class WriteTimer extends TimerTask {
 
     private void rerunTimer()
     {
-        WriteTimer task = new WriteTimer(m_BluetoothCharacteristic, m_BluetoothGatt);
+        PacketTimeout task = new PacketTimeout(m_BluetoothCharacteristic, m_BluetoothGatt);
         Timer timer = new Timer(true);
-        timer.schedule(task, CurrentInterval);
+        timer.schedule(task, TIMEOUT_INTERVAL);
     }
 
     private void writePacket(byte[] data)
