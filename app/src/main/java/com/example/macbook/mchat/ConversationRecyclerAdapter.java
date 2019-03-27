@@ -68,13 +68,16 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         //Glide.with(mContext).asBitmap().load(mContacts.get(position).getImage()).into(holder.image);
         Message msg = mConversations.get(position);
 
-        final Contact contact = getContact(msg.getContactId());
-        if (contact != null) {
-            holder.contactName.setText(contact.getName());
+        Contact tmpContact = getContact(msg.getContactId());
+        if (tmpContact != null) {
+            holder.contactName.setText(tmpContact.getName());
         }
         else {
+            tmpContact = new Contact(msg.getContactId(), msg.getContactId(), "https://i.redd.it/tpsnoz5bzo501.jpg");
             holder.contactName.setText(msg.getContactId());
         }
+
+        final Contact contact = tmpContact;
 
         holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
