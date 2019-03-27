@@ -41,6 +41,7 @@ public class TransmissionManager {
             Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
         else {
+            waitingAck = false;
             write(characteristic, gatt);
         }
     }
