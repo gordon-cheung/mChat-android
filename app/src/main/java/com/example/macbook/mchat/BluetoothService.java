@@ -165,14 +165,14 @@ public class BluetoothService extends Service {
         if (message.getDataType() == Message.TEXT) {
             Packet packet = new Packet(message);
             TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            Log.d(TAG, "Queued packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+            Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
                     TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-                    Log.d(TAG, "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                    Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                 }
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
