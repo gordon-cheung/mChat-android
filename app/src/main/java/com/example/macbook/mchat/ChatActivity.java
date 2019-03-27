@@ -34,6 +34,7 @@ public class ChatActivity extends MChatActivity {
     static int mMsgId = 0;
 
     // TODO Aggregate Contact to this class
+    private Contact mContact;
     private String contactId;
     private ArrayList<String> mPictures = new ArrayList<String>();
 
@@ -55,8 +56,9 @@ public class ChatActivity extends MChatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // TODO aggregate Contact with ChatActivity
-        contactId = getIntent().getExtras().getString(AppNotification.CONTACT_DATA);
-        getSupportActionBar().setTitle(contactId);
+        mContact = (Contact)getIntent().getExtras().getSerializable(AppNotification.CONTACT_DATA);
+        contactId = mContact.getPhoneNumber();
+        getSupportActionBar().setTitle(mContact.getName());
 
         Point displaySize = getDisplaySize();
         mAdapter = new ChatAdapter(displaySize.x, displaySize.y);
