@@ -143,41 +143,38 @@ public class Packet {
                 Uri imageUri = Uri.fromFile(new File(msg.getBody()));
                 Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
 
-                // Apply image compression algorithm here
-
-                int size = image.getByteCount();
-                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                image.copyPixelsToBuffer(byteBuffer);
-                byte[] byteArray = byteBuffer.array();
-
-                packets.addAll(encodeImage(msg, byteArray));
-
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                image.compress(Bitmap.CompressFormat.JPEG, 10, os);
+                packets.addAll(encodeImage(msg, os.toByteArray()));
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
                 throw ex;
             }
         }
 
-        // TODO remove this after testing
-        for (Packet p : packets) {
-            p.printPacket();
-        }
-
         return packets;
     }
 
+    // TODO Handle the case where image is only 1 packet
     public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
         ArrayList<Packet> packets = new ArrayList<>();
         int size = image.length;
+        int count = msg.getMsgId();
         for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
+            msg.setMsgId(ChatActivity.incrementMessageId());
             if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
+                if (i == 0) {
+                    msg.setDataType(Message.PICTURE_START);
+                }
                 byte[] buffer = Arrays.copyOfRange(image, i, i + Packet.PACKET_MAX_CONTENT_SIZE);
                 packets.add(new Packet(msg, buffer));
             }
             else {
                 byte[] buffer = Arrays.copyOfRange(image, i, size);
+                msg.setDataType(Message.PICTURE_END);
                 packets.add(new Packet(msg, buffer));
             }
+            msg.setDataType(Message.PICTURE);
         }
 
         return packets;

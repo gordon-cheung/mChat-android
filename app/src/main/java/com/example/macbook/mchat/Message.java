@@ -35,7 +35,9 @@ public class Message implements Serializable {
     public static final int ERROR = 7;
     public static final int BUFFER_FULL = 8;
     public static final int TIMEOUT = 9;
-    public static final int NACK = 10;
+    public static final int PICTURE_START = 10;
+    public static final int PICTURE_END = 11;
+    public static final int NACK = 12;
 
     @PrimaryKey(autoGenerate = true)
     private int id;
