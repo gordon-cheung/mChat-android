@@ -2,6 +2,8 @@ package com.example.macbook.mchat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -65,9 +67,15 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         Log.d(TAG, "onBindViewHolder: called.");
         //Glide.with(mContext).asBitmap().load(mContacts.get(position).getImage()).into(holder.image);
         Message msg = mConversations.get(position);
-        // TODO use appdata user id
-        String contactName = msg.getContactId();
-        holder.contactName.setText(contactName);
+
+        final Contact contact = getContact(msg.getContactId());
+        if (contact != null) {
+            holder.contactName.setText(contact.getName());
+        }
+        else {
+            holder.contactName.setText(msg.getContactId());
+        }
+
         holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,7 +86,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
                 Toast.makeText(mContext, contactName, Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent(mContext, ChatActivity.class);
-                intent.putExtra(AppNotification.CONTACT_DATA, contactName);
+                intent.putExtra(AppNotification.CONTACT_DATA, contact);
                 mContext.startActivity(intent);
             }
         });
@@ -103,5 +111,21 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
 
+    }
+
+    private Contact getContact(String address) {
+        Log.d(TAG, "Retrieving contacts");
+        Cursor phone = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.NUMBER + " = " + address, null, null);
+        if (phone != null) {
+            if (phone.moveToFirst()) {
+                String name = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                String number = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                number = Contact.formatPhoneNumber(number);
+                Contact contact = new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg");
+                return contact;
+            }
+        }
+
+        return null;
     }
 }
