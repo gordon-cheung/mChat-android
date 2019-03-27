@@ -11,7 +11,10 @@ public class PacketTimer extends TimerTask {
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
     private final static String TAG = PacketTimer.class.getSimpleName();
-    final static int TIMEOUT_INTERVAL = 5000;
+    final static int TIMEOUT_INTERVAL = 10000;
+    static int NACK_RETRY_INTERVAL = 1000;
+    final static int MIN_NACK_INTERVAL = 1000;
+    final static int MAX_NACK_INTERVAL = 60000;
 
     public PacketTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {

@@ -23,7 +23,9 @@ public class TransmissionManager {
     }
 
     public static void ackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
-        m_Timer.cancel();
+        if (m_Timer != null)
+            m_Timer.cancel();
+        PacketTimer.NACK_RETRY_INTERVAL = Math.max(PacketTimer.MIN_NACK_INTERVAL, (PacketTimer.NACK_RETRY_INTERVAL / 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! ACK received but pending queue is empty!");
         }
@@ -36,13 +38,17 @@ public class TransmissionManager {
     }
 
     public static void nackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
-        m_Timer.cancel();
+        if (m_Timer != null)
+            m_Timer.cancel();
+        PacketTimer.NACK_RETRY_INTERVAL = Math.min(PacketTimer.MAX_NACK_INTERVAL, (PacketTimer.NACK_RETRY_INTERVAL * 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
         else {
-            waitingAck = false;
-            write(characteristic, gatt);
+            //waitingAck = false;
+            //write(characteristic, gatt);
+            PacketTimer task = new PacketTimer(characteristic, gatt);
+            m_Timer.schedule(task, PacketTimer.NACK_RETRY_INTERVAL);
         }
     }
 
