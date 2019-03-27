@@ -18,14 +18,16 @@ public class TransmissionManager {
 
     public static void queuedWrite(Packet packet, BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
+        Log.d(TAG, "Queued Write");
         m_PendingQueue.add(packet);
         write(characteristic, gatt);
     }
 
     public static void ackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        Log.d(TAG, "ACK Received!");
         if (m_Timer != null)
             m_Timer.cancel();
-        PacketTimer.NACK_RETRY_INTERVAL = Math.max(PacketTimer.MIN_NACK_INTERVAL, (PacketTimer.NACK_RETRY_INTERVAL / 2));
+        PacketTimer.TIMEOUT_INTERVAL = Math.max(PacketTimer.MIN_TIMEOUT_INTERVAL, (PacketTimer.TIMEOUT_INTERVAL / 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! ACK received but pending queue is empty!");
         }
@@ -38,21 +40,23 @@ public class TransmissionManager {
     }
 
     public static void nackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        Log.d(TAG, "NACK Received!");
         if (m_Timer != null)
             m_Timer.cancel();
-        PacketTimer.NACK_RETRY_INTERVAL = Math.min(PacketTimer.MAX_NACK_INTERVAL, (PacketTimer.NACK_RETRY_INTERVAL * 2));
+        PacketTimer.TIMEOUT_INTERVAL = Math.min(PacketTimer.MAX_TIMEOUT_INTERVAL, (PacketTimer.TIMEOUT_INTERVAL * 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
         else {
-            //waitingAck = false;
-            //write(characteristic, gatt);
-            PacketTimer task = new PacketTimer(characteristic, gatt);
-            m_Timer.schedule(task, PacketTimer.NACK_RETRY_INTERVAL);
+            waitingAck = false;
+            write(characteristic, gatt);
+            //PacketTimer task = new PacketTimer(characteristic, gatt);
+            //m_Timer.schedule(task, PacketTimer.NACK_RETRY_INTERVAL);
         }
     }
 
     public static void txSuccess() {
+        Log.d(TAG, "TX SUCCESS");
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
@@ -62,6 +66,7 @@ public class TransmissionManager {
     }
 
     public static void txFailure() {
+        Log.d(TAG, "TX FAILURE");
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
