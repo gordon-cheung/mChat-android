@@ -25,22 +25,12 @@ public class ChatActivity extends MChatActivity {
     private String TAG = ChatActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
-    static int mMsgId = 0;
 
-    // TODO Aggregate Contact to this class
     private Contact mContact;
     private String contactId;
     private ArrayList<String> mPictures = new ArrayList<String>();
 
     private final static int GALLERY = 1;
-
-    static int incrementMessageId() {
-        mMsgId++;
-        if (mMsgId >= 65536){
-            mMsgId = 0;
-        }
-        return mMsgId;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +39,6 @@ public class ChatActivity extends MChatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.app_toolbar));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // TODO aggregate Contact with ChatActivity
         mContact = (Contact)getIntent().getExtras().getSerializable(AppNotification.CONTACT_DATA);
         contactId = mContact.getPhoneNumber();
         getSupportActionBar().setTitle(mContact.getName());
@@ -74,14 +63,14 @@ public class ChatActivity extends MChatActivity {
                 String message = editText.getText().toString();
 
                 for (String imageFilePath : mPictures) {
-                    final Message msg = new Message(imageFilePath, contactId, Message.IS_SEND, Message.PICTURE, incrementMessageId());
+                    final Message msg = new Message(imageFilePath, contactId, Message.IS_SEND, Message.PICTURE, MChatApplication.getAppMsgId());
                     sendMessage(msg);
                 }
 
                 clearImages();
 
                 if (!message.isEmpty()) {
-                    sendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT, incrementMessageId()));
+                    sendMessage(new Message(message, contactId, Message.IS_SEND, Message.TEXT, MChatApplication.getAppMsgId()));
                     editText.setText("");
                 }
             }
@@ -192,31 +181,28 @@ public class ChatActivity extends MChatActivity {
         return displaySize;
     }
 
-    private boolean sendMessage(final Message msg) {
+    private void sendMessage(final Message msg) {
         int currentSize = mAdapter.getItemCount();
 
-        // Update UI
-        mAdapter.addMessage(msg);
-        mAdapter.notifyItemInserted(currentSize);
-        mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
+        if (mBluetoothService.isConnected()) {
+            mAdapter.addMessage(msg);
+            mAdapter.notifyItemInserted(currentSize);
+            mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
-        // Store message in database
-
-
-        // TODO handle messages failed to send
-        int msgAckId = mBluetoothService.send(msg);
-        if (msgAckId != -1) {
+            final int msgAckId = mBluetoothService.send(msg);
             msg.setMsgAckId(msgAckId);
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Inserting stored sent message");
-                    AppDatabase.getInstance().messageDao().insert(msg);
-                }
-            });
-            return true;
-        } else {
-            return false;
+            if (msgAckId != -1) {
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Inserting stored sent message");
+                        AppDatabase.getInstance().messageDao().insert(msg);
+                    }
+                });
+            }
+        }
+        else {
+            Toast.makeText(getApplicationContext(), "MChat is currently not connected, message will not send", Toast.LENGTH_SHORT).show();
         }
     }
 

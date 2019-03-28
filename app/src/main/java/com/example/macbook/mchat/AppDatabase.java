@@ -6,11 +6,12 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
-@Database(entities = {Message.class}, version = 1)
+@Database(entities = {Message.class, AppSetting.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase sInstance;
 
     public abstract MessageDao messageDao();
+    public abstract AppSettingDao appSettingDao();
 
     // TODO add logging whenever a database action is performed
     public static AppDatabase getInstance() {

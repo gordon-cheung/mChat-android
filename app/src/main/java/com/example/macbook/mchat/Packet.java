@@ -162,7 +162,7 @@ public class Packet {
         int size = image.length;
         int count = msg.getMsgId();
         for (int i = 0; i < size; i += PACKET_MAX_CONTENT_SIZE) {
-            msg.setMsgId(ChatActivity.incrementMessageId());
+            msg.setMsgId(MChatApplication.getAppMsgId());
             if (i + Packet.PACKET_MAX_CONTENT_SIZE < size) {
                 if (i == 0) {
                     msg.setDataType(Message.PICTURE_START);

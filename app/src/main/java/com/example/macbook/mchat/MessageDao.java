@@ -3,9 +3,8 @@ package com.example.macbook.mchat;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
-
 import java.util.List;
-//TODO organize into folders
+
 @Dao
 public interface MessageDao {
     @Query("SELECT * FROM Messages")
