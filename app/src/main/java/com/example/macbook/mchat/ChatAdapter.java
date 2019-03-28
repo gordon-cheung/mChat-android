@@ -109,28 +109,34 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
     public class SentTextMessageTextViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public SentTextMessageTextViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.text_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(Message message) {
             mMessageBody.setText(message.getBody());
+            mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
         }
     }
 
     public class SentPictureMessageViewHolder extends RecyclerView.ViewHolder {
         public ImageView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public SentPictureMessageViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.picture_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(final Message message) {
             try {
                 loadImage(mMessageBody, message.getBody());
+                mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
                 mMessageBody.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);
@@ -146,28 +152,36 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
     public class ReceivedTextMessageViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public ReceivedTextMessageViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.text_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(Message message) {
+
             mMessageBody.setText(message.getBody());
+            mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
         }
     }
 
     public class ReceivedPictureMessageViewHolder extends RecyclerView.ViewHolder {
         public ImageView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public ReceivedPictureMessageViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.picture_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(final Message message) {
             try {
                 loadImage(mMessageBody, message.getBody());
+                mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
+
                 mMessageBody.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         Intent intent = new Intent(MChatApplication.getAppContext(), FullImageViewActivity.class);

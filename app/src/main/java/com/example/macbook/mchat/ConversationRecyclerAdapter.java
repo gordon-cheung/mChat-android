@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import de.hdodenhof.circleimageview.CircleImageView;
-
 import java.util.ArrayList;
 
 public class ConversationRecyclerAdapter extends RecyclerView.Adapter<ConversationRecyclerAdapter.ViewHolder> {
@@ -71,6 +70,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         final Contact contact = getContact(msg.getContactId());
 
         holder.contactName.setText(contact.getName());
+        holder.conversationTimestamp.setText(DateUtilities.getDateString(msg.getTimestamp()));
 
         if (msg.getDataType() == Message.PICTURE) {
             String displayMessage = msg.getType() == Message.IS_RECEIVE ? "A picture message was received" : "A picture message was sent";
@@ -103,6 +103,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
     public class ViewHolder extends RecyclerView.ViewHolder{
         CircleImageView image;
         TextView contactName;
+        TextView conversationTimestamp;
         TextView conversationMessage;
         ConstraintLayout parentLayout;
 
@@ -110,10 +111,10 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
             super(itemView);
             image = itemView.findViewById(R.id.image);
             contactName = itemView.findViewById(R.id.contact_name);
+            conversationTimestamp = itemView.findViewById(R.id.conversation_timestamp);
             conversationMessage = itemView.findViewById(R.id.conversation_message);
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
-
     }
 
     private Contact getContact(String address) {
