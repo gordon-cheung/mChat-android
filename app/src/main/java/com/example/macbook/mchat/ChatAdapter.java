@@ -110,16 +110,20 @@ public class ChatAdapter extends RecyclerView.Adapter {
     public class SentTextMessageTextViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageBody;
         public TextView mMessageTimestamp;
+        public ImageView mMessageStatus;
 
         public SentTextMessageTextViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.text_message_body);
-            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
+            mMessageTimestamp = itemView.findViewById(R.id.message_timestamp);
+            mMessageStatus = itemView.findViewById(R.id.message_status);
+
         }
 
         void bind(Message message) {
             mMessageBody.setText(message.getBody());
             mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
+            mMessageStatus.setImageResource(getMessageStatusIcon(message.getStatus()));
         }
     }
 
@@ -226,6 +230,18 @@ public class ChatAdapter extends RecyclerView.Adapter {
             }
         }
         return new Point((int)width, (int)height);
+    }
+
+    private int getMessageStatusIcon(int status) {
+        if (status == Message.STATUS_PENDING) {
+            return R.drawable.ic_message_pending;
+        } else if (status == Message.STATUS_SENT) {
+            return R.drawable.ic_message_sent;
+        } else if (status == Message.STATUS_RECEIVED) {
+            return R.drawable.ic_message_received;
+        } else {
+            return R.drawable.ic_message_fail;
+        }
     }
 
 }
