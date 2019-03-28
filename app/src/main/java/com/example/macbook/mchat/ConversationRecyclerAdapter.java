@@ -71,7 +71,15 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         final Contact contact = getContact(msg.getContactId());
 
         holder.contactName.setText(contact.getName());
-        holder.conversationMessage.setText(msg.getBody());
+
+        if (msg.getDataType() == Message.PICTURE) {
+            String displayMessage = msg.getType() == Message.IS_RECEIVE ? "A picture message was received" : "A picture message was sent";
+            holder.conversationMessage.setText(displayMessage);
+        }
+        else {
+            holder.conversationMessage.setText(msg.getBody());
+        }
+
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
