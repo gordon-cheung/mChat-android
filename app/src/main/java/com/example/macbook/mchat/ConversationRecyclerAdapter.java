@@ -68,18 +68,18 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         //Glide.with(mContext).asBitmap().load(mContacts.get(position).getImage()).into(holder.image);
         Message msg = mConversations.get(position);
 
-        Contact tmpContact = getContact(msg.getContactId());
-        if (tmpContact != null) {
-            holder.contactName.setText(tmpContact.getName());
+        final Contact contact = getContact(msg.getContactId());
+
+        holder.contactName.setText(contact.getName());
+
+        if (msg.getDataType() == Message.PICTURE) {
+            String displayMessage = msg.getType() == Message.IS_RECEIVE ? "A picture message was received" : "A picture message was sent";
+            holder.conversationMessage.setText(displayMessage);
         }
         else {
-            tmpContact = new Contact(msg.getContactId(), msg.getContactId(), "https://i.redd.it/tpsnoz5bzo501.jpg");
-            holder.contactName.setText(msg.getContactId());
+            holder.conversationMessage.setText(msg.getBody());
         }
 
-        final Contact contact = tmpContact;
-
-        holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,17 +118,15 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
 
     private Contact getContact(String address) {
         Log.d(TAG, "Retrieving contacts");
-        Cursor phone = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.NUMBER + " = " + address, null, null);
-        if (phone != null) {
-            if (phone.moveToFirst()) {
-                String name = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                String number = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                number = Contact.formatPhoneNumber(number);
-                Contact contact = new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg");
-                return contact;
+        Cursor phones = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+        while(phones.moveToNext()) {
+            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String number = Contact.formatPhoneNumber(phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            if (number.equals(address)) {
+                return new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg" );
             }
         }
 
-        return null;
+        return new Contact(address, address, "https://i.redd.it/tpsnoz5bzo501.jpg");
     }
 }
