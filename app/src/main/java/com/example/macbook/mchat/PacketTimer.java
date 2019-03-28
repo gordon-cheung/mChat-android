@@ -23,6 +23,7 @@ public class PacketTimer extends TimerTask {
 
     @Override
     public void run() {
+        Log.d(TAG, "Timeout Occured!");
         TransmissionManager.waitingAck = false;
         TransmissionManager.write(m_BluetoothCharacteristic, m_BluetoothGatt);
     }

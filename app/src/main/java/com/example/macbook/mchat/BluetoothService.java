@@ -163,6 +163,13 @@ public class BluetoothService extends Service {
 
     public boolean send(Message message) {
         if (message.getDataType() == Message.TEXT) {
+//            for (int i = 0; i < 100; i++)
+//            {
+//                Message testMsg = new Message(Integer.toString(i), message.getContactId(), message.getType(), message.getDataType(), i);
+//                Packet packet = new Packet(testMsg);
+//                TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+//                Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+//            }
             Packet packet = new Packet(message);
             TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
             Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
