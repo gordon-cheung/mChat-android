@@ -3,13 +3,8 @@ package com.example.macbook.mchat;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
-
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.Date;
 
 // TODO create inherited class for ack messages or chat messages?
 @Entity(tableName = "messages")

@@ -143,7 +143,7 @@ public class BluetoothService extends Service {
 
     private void startNetworkRegistration() {
         Log.d(TAG, "Sending network registration packet");
-        Message networkRegMsg = new Message("", MChatActivity.PHONE_NUMBER, Message.IS_SEND, Message.STATE_INIT, ChatActivity.incrementMessageId());
+        Message networkRegMsg = new Message("", MChatActivity.PHONE_NUMBER, Message.IS_SEND, Message.STATE_INIT, MChatApplication.getAppMsgId());
         send(networkRegMsg);
     }
 
@@ -161,8 +161,12 @@ public class BluetoothService extends Service {
         }
     }
 
+    public boolean isConnected() {
+        return NETWORK_REGISTRATION_COMPLETE;
+    }
+
     public int send(final Message message) {
-        if (NETWORK_REGISTRATION_COMPLETE) {
+        if (isConnected()) {
             if (message.getDataType() == Message.TEXT) {
                 Packet packet = new Packet(message);
                 TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
@@ -178,15 +182,15 @@ public class BluetoothService extends Service {
                     return packets.get(packets.size() - 1).getMsgId();
                 } catch (IOException ex) {
                     Log.e(TAG, ex.getMessage());
-                    return -1;
+                    return message.getMsgId();
                 }
             }
         } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
             Packet packet = new Packet(message);
             TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            return 1;
+            return message.getMsgId();
         }
-        return -1;
+        return message.getMsgId();
     }
 
     public void receive(byte[] data) {

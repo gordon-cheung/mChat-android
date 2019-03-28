@@ -126,7 +126,7 @@ public class SelectDeviceActivity extends MChatActivity {
     }
 
     private void scan() {
-        if (isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+        //if (isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             Log.d(TAG, "Starting scan");
             isScanning = true;
             mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -143,10 +143,10 @@ public class SelectDeviceActivity extends MChatActivity {
                     }
                 }
             }, 10000);
-        }
-        else {
-            getPermissions();
-        }
+//        }
+//        else {
+//            getPermissions();
+//        }
     }
 
     private void stopScan() {
