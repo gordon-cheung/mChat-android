@@ -161,25 +161,13 @@ public class BluetoothService extends Service {
         }
     }
 
-    public boolean send(Message message) {
+    public int send(final Message message) {
         if (NETWORK_REGISTRATION_COMPLETE) {
             if (message.getDataType() == Message.TEXT) {
-//            for (int i = 0; i < 100; i++)
-//            {
-//                Message testMsg = new Message(Integer.toString(i), message.getContactId(), message.getType(), message.getDataType(), i);
-//                Packet packet = new Packet(testMsg);
-//                TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-//                Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-//            }
-                String test = "";
-                for (int i = 0; i < (Packet.PACKET_MAX_CONTENT_SIZE); i++) {
-                    test = test + "a";
-                }
-                Message msg = new Message(test, message.getContactId(), message.getType(), message.getDataType(), message.getMsgId());
-                Packet packet = new Packet(msg);
+                Packet packet = new Packet(message);
                 TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-                return true;
+                return message.getMsgId();
             } else if (message.getDataType() == Message.PICTURE) {
                 try {
                     ArrayList<Packet> packets = Packet.constructPackets(message);
@@ -187,19 +175,18 @@ public class BluetoothService extends Service {
                         TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                         Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                     }
+                    return packets.get(packets.size() - 1).getMsgId();
                 } catch (IOException ex) {
                     Log.e(TAG, ex.getMessage());
-                    return false;
+                    return -1;
                 }
-                return true;
             }
-        }
-        if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
+        } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
             Packet packet = new Packet(message);
             TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            return true;
+            return 1;
         }
-        return false;
+        return -1;
     }
 
     public void receive(byte[] data) {
@@ -389,7 +376,7 @@ public class BluetoothService extends Service {
             @Override
             public void run() {
                 Log.d(TAG, "Updating message to status: " + status);
-                AppDatabase.getInstance().messageDao().updateStatus(msg.getContactId(), msg.getMsgId(), status);
+                AppDatabase.getInstance().messageDao().updateStatus(msg.getContactId(), msg.getMsgId(), status, Message.IS_SEND);
             }
         });
     }

@@ -3,8 +3,6 @@ package com.example.macbook.mchat;
 import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -20,10 +18,6 @@ import android.util.Log;
 import android.view.Display;
 import android.widget.*;
 import android.view.View;
-
-import java.io.*;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,37 +134,43 @@ public class ChatActivity extends MChatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                try {
-                    BluetoothService bs = new BluetoothService();
-                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
-                    int size = bitmap.getByteCount();
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 10, os);
-                    int compressedSize = os.toByteArray().length;
+                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 4);
+                updateMessage.setMsgAckId(-1);
+                Intent intent = new Intent(AppNotification.ACK_RECEIVED_NOTIFICATION);
+                intent.putExtra(AppNotification.ACK_RECEIVED_NOTIFICATION, updateMessage);
+                sendBroadcast(intent);
 
-                    Message message = new Message("Some Image", "4038092883", Message.IS_SEND, Message.PICTURE, 0);
-                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
-                    os.close();
-                    for (Packet p : sentImagePackets) {
-                        bs.storeImagePacket(p);
-                        ArrayList<Packet> image = bs.detectImageReceived();
-                        if (image != null) {
-                            System.out.println("Image detected");
-                            Bitmap receivedImageBitmap = bs.constructImage(image);
-                            Message receiveMessage = new Message(p, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
-                            String url = bs.saveImage(bitmap, receiveMessage);
-
-                            receiveMessage.setDataType(Message.PICTURE);
-                            receiveMessage.setBody(url);
-
-                            final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                            intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, receiveMessage);
-                            sendBroadcast(intent);
-                        }
-                    }
-                } catch(IOException ex) {
-
-                }
+//                try {
+//                    BluetoothService bs = new BluetoothService();
+//                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+//                    int size = bitmap.getByteCount();
+//                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 10, os);
+//                    int compressedSize = os.toByteArray().length;
+//
+//                    Message message = new Message("Some Image", "4038092883", Message.IS_SEND, Message.PICTURE, 0);
+//                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
+//                    os.close();
+//                    for (Packet p : sentImagePackets) {
+//                        bs.storeImagePacket(p);
+//                        ArrayList<Packet> image = bs.detectImageReceived();
+//                        if (image != null) {
+//                            System.out.println("Image detected");
+//                            Bitmap receivedImageBitmap = bs.constructImage(image);
+//                            Message receiveMessage = new Message(p, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
+//                            String url = bs.saveImage(bitmap, receiveMessage);
+//
+//                            receiveMessage.setDataType(Message.PICTURE);
+//                            receiveMessage.setBody(url);
+//
+//                            final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+//                            intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, receiveMessage);
+//                            sendBroadcast(intent);
+//                        }
+//                    }
+//                } catch(IOException ex) {
+//
+//                }
             }
         });
     }
@@ -201,24 +201,26 @@ public class ChatActivity extends MChatActivity {
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
         // Store message in database
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-            Log.d(TAG, "Inserting stored sent message");
-            AppDatabase.getInstance().messageDao().insert(msg);
-            }
-        });
+
 
         // TODO handle messages failed to send
-        if (mBluetoothService.send(msg)) {
-            Log.d(TAG, "Message successfully sent");
+        int msgAckId = mBluetoothService.send(msg);
+        if (msgAckId != -1) {
+            msg.setMsgAckId(msgAckId);
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "Inserting stored sent message");
+                    AppDatabase.getInstance().messageDao().insert(msg);
+                }
+            });
+            return true;
         } else {
-            Log.e(TAG, "Message failed to send");
+            return false;
         }
-        return true;
     }
 
-    private boolean ReceiveMessage(final Message msg) {
+    private boolean receiveMessage(final Message msg) {
         Log.d(TAG, "Message received: " + msg.getBody() + " from user: " + msg.getContactId());
         int currentSize = mAdapter.getItemCount();
 
@@ -230,6 +232,13 @@ public class ChatActivity extends MChatActivity {
         return true;
     }
 
+    private boolean updateMessageStatus(final Message msg) {
+        int itemChangePosition = mAdapter.updateMessage(msg);
+        mAdapter.notifyItemChanged(itemChangePosition);
+
+        return true;
+    }
+
     @Override
     public void onAppNotificationReceived(Intent intent) {
         final String action = intent.getAction();
@@ -237,7 +246,14 @@ public class ChatActivity extends MChatActivity {
             Log.d(TAG, "Message Received");
             Message msg = (Message)intent.getSerializableExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
             if (msg.getContactId().equals(contactId)) {
-                ReceiveMessage(msg);
+                receiveMessage(msg);
+            }
+        }
+        else if (action == AppNotification.ACK_RECEIVED_NOTIFICATION) {
+            Log.d(TAG, "ACK Received");
+            Message msg = (Message)intent.getSerializableExtra(AppNotification.ACK_RECEIVED_NOTIFICATION);
+            if (msg.getContactId().equals(contactId)) {
+                updateMessageStatus(msg);
             }
         }
     }
