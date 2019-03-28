@@ -5,16 +5,15 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import de.hdodenhof.circleimageview.CircleImageView;
-
 import java.util.ArrayList;
 
 public class ConversationRecyclerAdapter extends RecyclerView.Adapter<ConversationRecyclerAdapter.ViewHolder> {
@@ -69,14 +68,18 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         Message msg = mConversations.get(position);
 
         final Contact contact = getContact(msg.getContactId());
-        if (contact != null) {
-            holder.contactName.setText(contact.getName());
+
+        holder.contactName.setText(contact.getName());
+        holder.conversationTimestamp.setText(DateUtilities.getDateString(msg.getTimestamp()));
+
+        if (msg.getDataType() == Message.PICTURE) {
+            String displayMessage = msg.getType() == Message.IS_RECEIVE ? "A picture message was received" : "A picture message was sent";
+            holder.conversationMessage.setText(displayMessage);
         }
         else {
-            holder.contactName.setText(msg.getContactId());
+            holder.conversationMessage.setText(msg.getBody());
         }
 
-        holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -100,32 +103,31 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
     public class ViewHolder extends RecyclerView.ViewHolder{
         CircleImageView image;
         TextView contactName;
+        TextView conversationTimestamp;
         TextView conversationMessage;
-        RelativeLayout parentLayout;
+        ConstraintLayout parentLayout;
 
         public ViewHolder(View itemView){
             super(itemView);
             image = itemView.findViewById(R.id.image);
             contactName = itemView.findViewById(R.id.contact_name);
+            conversationTimestamp = itemView.findViewById(R.id.conversation_timestamp);
             conversationMessage = itemView.findViewById(R.id.conversation_message);
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
-
     }
 
     private Contact getContact(String address) {
         Log.d(TAG, "Retrieving contacts");
-        Cursor phone = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.NUMBER + " = " + address, null, null);
-        if (phone != null) {
-            if (phone.moveToFirst()) {
-                String name = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                String number = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                number = Contact.formatPhoneNumber(number);
-                Contact contact = new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg");
-                return contact;
+        Cursor phones = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+        while(phones.moveToNext()) {
+            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String number = Contact.formatPhoneNumber(phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            if (number.equals(address)) {
+                return new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg" );
             }
         }
 
-        return null;
+        return new Contact(address, address, "https://i.redd.it/tpsnoz5bzo501.jpg");
     }
 }
