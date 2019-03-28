@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="3dp"
-            android:textColor="#ffffff"
+            android:textColor="@color/black"
             android:textSize="10sp"
             app:layout_constraintRight_toLeftOf="@+id/text_message_body"
             app:layout_constraintBottom_toBottomOf="parent"

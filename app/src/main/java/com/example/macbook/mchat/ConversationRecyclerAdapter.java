@@ -69,11 +69,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         Message msg = mConversations.get(position);
         String contactName = msg.getContactId();
         holder.contactName.setText(contactName);
-
-        DateFormat dateFormat = new SimpleDateFormat("MMM dd HH:mm a");
-        Date timestampDate = new Date(msg.getTimestamp());
-        holder.conversationTimestamp.setText(dateFormat.format(timestampDate));
-
+        holder.conversationTimestamp.setText(DateUtilities.getDateString(msg.getTimestamp()));
         holder.conversationMessage.setText(msg.getBody());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override

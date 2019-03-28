@@ -107,14 +107,17 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
     public class SentTextMessageTextViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public SentTextMessageTextViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.text_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(Message message) {
             mMessageBody.setText(message.getBody());
+            mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
         }
     }
 
@@ -144,14 +147,18 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
     public class ReceivedTextMessageViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageBody;
+        public TextView mMessageTimestamp;
 
         public ReceivedTextMessageViewHolder(View itemView) {
             super(itemView);
             mMessageBody = itemView.findViewById(R.id.text_message_body);
+            mMessageTimestamp = itemView.findViewById(R.id.text_message_timestamp);
         }
 
         void bind(Message message) {
+
             mMessageBody.setText(message.getBody());
+            mMessageTimestamp.setText(DateUtilities.getDateString(message.getTimestamp()));
         }
     }
 
