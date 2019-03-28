@@ -3,6 +3,8 @@ package com.example.macbook.mchat;
 import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -18,6 +20,10 @@ import android.util.Log;
 import android.view.Display;
 import android.widget.*;
 import android.view.View;
+
+import java.io.*;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +34,7 @@ public class ChatActivity extends MChatActivity {
     static int mMsgId = 0;
 
     // TODO Aggregate Contact to this class
+    private Contact mContact;
     private String contactId;
     private ArrayList<String> mPictures = new ArrayList<String>();
 
@@ -49,8 +56,9 @@ public class ChatActivity extends MChatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // TODO aggregate Contact with ChatActivity
-        contactId = getIntent().getExtras().getString(AppNotification.CONTACT_DATA);
-        getSupportActionBar().setTitle(contactId);
+        mContact = (Contact)getIntent().getExtras().getSerializable(AppNotification.CONTACT_DATA);
+        contactId = mContact.getPhoneNumber();
+        getSupportActionBar().setTitle(mContact.getName());
 
         Point displaySize = getDisplaySize();
         mAdapter = new ChatAdapter(displaySize.x, displaySize.y);
@@ -126,20 +134,43 @@ public class ChatActivity extends MChatActivity {
         };
         chatEditText.addTextChangedListener(textWatcher);
 
-        // TODO: Remove
+        // TODO: REMOVE
         final Button testButton = findViewById(R.id.button_chatbox_test);
         testButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                // Enable this to test startNetworkRegistration
-                //mBluetoothService.startNetworkRegistration();
+                try {
+                    BluetoothService bs = new BluetoothService();
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+                    int size = bitmap.getByteCount();
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 10, os);
+                    int compressedSize = os.toByteArray().length;
 
-                // Enable this to test broadcast notification
-                Intent broadcastTestIntent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-                Message message = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", contactId, Message.IS_RECEIVE, Message.PICTURE, System.currentTimeMillis());
-                broadcastTestIntent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, message);
-                sendBroadcast(broadcastTestIntent);
+                    Message message = new Message("Some Image", "4038092883", Message.IS_SEND, Message.PICTURE, 0);
+                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
+                    os.close();
+                    for (Packet p : sentImagePackets) {
+                        bs.storeImagePacket(p);
+                        ArrayList<Packet> image = bs.detectImageReceived();
+                        if (image != null) {
+                            System.out.println("Image detected");
+                            Bitmap receivedImageBitmap = bs.constructImage(image);
+                            Message receiveMessage = new Message(p, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
+                            String url = bs.saveImage(bitmap, receiveMessage);
+
+                            receiveMessage.setDataType(Message.PICTURE);
+                            receiveMessage.setBody(url);
+
+                            final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                            intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, receiveMessage);
+                            sendBroadcast(intent);
+                        }
+                    }
+                } catch(IOException ex) {
+
+                }
             }
         });
     }

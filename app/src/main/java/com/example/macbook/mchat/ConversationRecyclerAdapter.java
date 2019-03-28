@@ -2,13 +2,15 @@ package com.example.macbook.mchat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -64,10 +66,20 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         Log.d(TAG, "onBindViewHolder: called.");
         //Glide.with(mContext).asBitmap().load(mContacts.get(position).getImage()).into(holder.image);
         Message msg = mConversations.get(position);
-        String contactName = msg.getContactId();
-        holder.contactName.setText(contactName);
+
+        final Contact contact = getContact(msg.getContactId());
+
+        holder.contactName.setText(contact.getName());
         holder.conversationTimestamp.setText(DateUtilities.getDateString(msg.getTimestamp()));
-        holder.conversationMessage.setText(msg.getBody());
+
+        if (msg.getDataType() == Message.PICTURE) {
+            String displayMessage = msg.getType() == Message.IS_RECEIVE ? "A picture message was received" : "A picture message was sent";
+            holder.conversationMessage.setText(displayMessage);
+        }
+        else {
+            holder.conversationMessage.setText(msg.getBody());
+        }
+
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -77,7 +89,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
                 Toast.makeText(mContext, contactName, Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent(mContext, ChatActivity.class);
-                intent.putExtra(AppNotification.CONTACT_DATA, contactName);
+                intent.putExtra(AppNotification.CONTACT_DATA, contact);
                 mContext.startActivity(intent);
             }
         });
@@ -93,7 +105,7 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         TextView contactName;
         TextView conversationTimestamp;
         TextView conversationMessage;
-        RelativeLayout parentLayout;
+        ConstraintLayout parentLayout;
 
         public ViewHolder(View itemView){
             super(itemView);
@@ -103,5 +115,19 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
             conversationMessage = itemView.findViewById(R.id.conversation_message);
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
+    }
+
+    private Contact getContact(String address) {
+        Log.d(TAG, "Retrieving contacts");
+        Cursor phones = mContext.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+        while(phones.moveToNext()) {
+            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String number = Contact.formatPhoneNumber(phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            if (number.equals(address)) {
+                return new Contact(name, number, "https://i.redd.it/tpsnoz5bzo501.jpg" );
+            }
+        }
+
+        return new Contact(address, address, "https://i.redd.it/tpsnoz5bzo501.jpg");
     }
 }

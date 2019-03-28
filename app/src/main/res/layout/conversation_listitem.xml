@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
@@ -8,17 +9,20 @@
     <de.hdodenhof.circleimageview.CircleImageView
             android:layout_width="60dp"
             android:layout_height="60dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             android:src="@mipmap/ic_launcher"
             android:id="@+id/image"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gordon"
-            android:layout_toRightOf="@+id/image"
+            app:layout_constraintLeft_toRightOf="@+id/image"
+            app:layout_constraintTop_toTopOf="parent"
             android:id="@+id/contact_name"
+            android:text="Gordon"
             android:textColor="#000"
-            android:layout_centerVertical="false"
             android:layout_marginLeft="20dp"
+            android:layout_marginTop="5dp"
             android:textSize="17sp"/>
     <TextView
             android:layout_width="wrap_content"
@@ -27,17 +31,19 @@
             android:id="@+id/conversation_timestamp"
             android:textColor="#000"
             android:layout_marginRight="10dp"
-            android:layout_alignParentRight="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             android:textSize="14sp"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Hello, how are you?"
-            android:layout_toRightOf="@+id/image"
+            android:singleLine="true"
+            app:layout_constraintLeft_toRightOf="@+id/image"
+            app:layout_constraintTop_toBottomOf="@+id/contact_name"
             android:id="@+id/conversation_message"
             android:textColor="#000"
-            android:layout_centerVertical="true"
             android:layout_marginLeft="20dp"
             android:textSize="14sp"/>
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

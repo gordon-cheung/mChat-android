@@ -4,13 +4,16 @@ import android.app.Service;
 import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.AsyncTask;
-import java.io.IOException;
-import java.net.URLEncoder;
+import java.io.*;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -51,6 +54,8 @@ public class BluetoothService extends Service {
     private BluetoothGattCharacteristic nordicUARTGattCharacteristicTX;
     private BluetoothDevice mCurrentDevice = null;
     static boolean NETWORK_REGISTRATION_COMPLETE = false;
+
+    private ArrayList<Packet> imageBuffer = new ArrayList<Packet>();
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -94,7 +99,7 @@ public class BluetoothService extends Service {
 
         @Override
         public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Log.d("TAG", "Descriptor write finished");
+            Log.d(TAG, "Descriptor write finished");
             startNetworkRegistration();
         }
     };
@@ -157,25 +162,26 @@ public class BluetoothService extends Service {
     }
 
     public boolean send(Message message) {
-        if (message.getDataType() == Message.TEXT || message.getDataType() == Message.STATE_INIT) {
+        if (message.getDataType() == Message.TEXT) {
             Packet packet = new Packet(message);
-            PacketQueue.writeNewPacket(packet);
-            Log.d("TAG", "Queuing packet write to BLE " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-            PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
             return true;
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
                 for (Packet pkt : packets) {
-                    PacketQueue.writeNewPacket(pkt);
-                    Log.d("TAG", "Queuing packet to BLE " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
-                    PacketQueue.write(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                    TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                    Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                 }
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
                 return false;
             }
             return true;
+        } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
+            Packet packet = new Packet(message);
+            TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
         }
         return false;
     }
@@ -184,7 +190,6 @@ public class BluetoothService extends Service {
         Log.d(TAG, "RECEIVED RAW BYTES: " + ByteUtilities.getByteArrayInHexString(data));
         Packet packet = new Packet(data);
 
-        Log.d(TAG, "Encoded RAW BYTES to PACKET");
         packet.printPacket();
         Message msg = new Message(packet, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
 
@@ -194,28 +199,156 @@ public class BluetoothService extends Service {
                 saveMsg(msg);
                 broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
                 break;
+            case Message.PICTURE_START:
+            case Message.PICTURE_END:
             case Message.PICTURE: //TODO
+                // store packet
+                storeImagePacket(packet);
+
+                // Detect if a full image was received
+                ArrayList<Packet> img = detectImageReceived();
+
+                if (img != null) {
+                    Log.d(TAG, "Full image received");
+                    Bitmap bitmap = constructImage(img);
+
+                    if (bitmap != null) {
+                        String url = saveImage(bitmap, msg);
+
+                        msg.setDataType(Message.PICTURE);
+                        msg.setBody(url);
+
+                        saveMsg(msg);
+                        broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                    }
+                }
+                break;
+            case Message.NACK:
+                TransmissionManager.nackReceived(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                Log.d(TAG, "NACK received");
                 break;
             case Message.BUFFER_FULL:
             case Message.TIMEOUT:
-                Log.d(TAG, "NACK Received, PhoneNum: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
+                TransmissionManager.txFailure();
+                Log.d(TAG, "Buffer full or timeout");
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
+                Log.d(TAG, "MLINK startup complete");
                 break;
-            case Message.IN_PROGRESS:
+            case Message.ACK:
+                TransmissionManager.ackReceived(nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
+                TransmissionManager.txSuccess();
                 updateMessageStatus(msg, Message.STATUS_SENT);
                 broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
+                Log.d(TAG, "TX success notification");
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);
+                TransmissionManager.txFailure();
                 broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
+                Log.d(TAG, "TX error notification");
             default:
                 Log.d(TAG, "Invalid packet type received, contactId: " + msg.getContactId() + "MsgId: " + msg.getMsgId() + " Type: " + msg.getDataType());
                 break;
         }
+    }
+
+    public void storeImagePacket(Packet pkt) {
+        for (int i = 0 ; i <= imageBuffer.size(); i++) {
+            if (i == imageBuffer.size()) {
+                imageBuffer.add(pkt);
+                break;
+            }
+            else if (imageBuffer.get(i).getMsgId() > pkt.getMsgId()) {
+                imageBuffer.add(i, pkt);
+                break;
+            }
+        }
+    }
+
+    public ArrayList<Packet> detectImageReceived() {
+        int startCountIndex = -1;
+        int currentMsgIdCounter = -1;
+        int endCountIndex = -1;
+        ArrayList<Packet> image = null;
+        for (int i = 0; i < imageBuffer.size(); i++) {
+            Packet currentPacket = imageBuffer.get(i);
+            if (currentPacket.getMsgId() == currentMsgIdCounter + 1 && startCountIndex != -1) {
+                currentMsgIdCounter++;
+            }
+            else {
+                currentMsgIdCounter = -1;
+                startCountIndex = -1;
+            }
+
+            if ((int)currentPacket.getDataType() == Message.PICTURE_START) {
+                startCountIndex = i;
+                currentMsgIdCounter = currentPacket.getMsgId();
+            }
+
+            if ((int)currentPacket.getDataType() == Message.PICTURE_END) {
+                if (startCountIndex != -1) {
+                    endCountIndex = i;
+                    image = new ArrayList<Packet>(imageBuffer.subList(startCountIndex, endCountIndex + 1));
+                    imageBuffer.subList(startCountIndex, endCountIndex + 1).clear();
+                    return image;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Bitmap constructImage(ArrayList<Packet> imgPkts) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (Packet p: imgPkts) {
+            try {
+                outputStream.write(p.getContent());
+            } catch (IOException ex) {
+                Log.e(TAG, ex.getMessage());
+            }
+        }
+
+        try {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.toByteArray().length);
+            String contentType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(outputStream.toByteArray()));
+            Log.d(TAG, "Constructed image of content type: " + contentType);
+            return bitmap;
+        } catch(IOException ex) {
+            Log.e(TAG, ex.getMessage());
+            return null;
+        }
+    }
+
+    // TODO testing png and jpg
+    public String saveImage(Bitmap bitmap, Message msg) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        File wallpaperDirectory = new File(
+                Environment.getExternalStorageDirectory() + "/mchat");
+        // have the object build the directory structure, if needed.
+        if (!wallpaperDirectory.exists()) {
+            wallpaperDirectory.mkdirs();
+        }
+
+        try {
+            String title = String.valueOf(System.currentTimeMillis()) + ".jpg";
+            File f = new File(wallpaperDirectory, title);
+            f.createNewFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            fo.close();
+            Log.d("TAG", "File Saved::---&gt;" + f.getAbsolutePath());
+
+            return f.getAbsolutePath();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return "";
     }
 
     private void broadcastMsg(final Message msg, final String notificationId) {
