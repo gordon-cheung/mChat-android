@@ -51,7 +51,7 @@ public class Packet {
         this.timestamp = new byte[PACKET_TIMESTAMP_LENGTH];
         System.arraycopy(pkt, PACKET_TIMESTAMP_INDEX, this.timestamp, 0, PACKET_TIMESTAMP_LENGTH);
 
-        int packetLength = PACKET_HEADER_LENGTH + (int)this.length;
+        int packetLength = PACKET_HEADER_LENGTH + (this.length & 0xFF);
 
         try {
             ByteArrayOutputStream contentStream = new ByteArrayOutputStream();
@@ -60,7 +60,7 @@ public class Packet {
             }
             this.content = contentStream.toByteArray();
         } catch (ArrayIndexOutOfBoundsException ex) {
-            Log.e(TAG, "Packet byte size does not match total length (18 " + this.length);
+            Log.e(TAG, "Packet byte size does not match total length (18 " + (this.length & 0xFF));
         }
     }
 
