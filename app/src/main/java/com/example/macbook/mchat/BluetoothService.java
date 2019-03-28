@@ -162,7 +162,8 @@ public class BluetoothService extends Service {
     }
 
     public boolean send(Message message) {
-        if (message.getDataType() == Message.TEXT) {
+        if (NETWORK_REGISTRATION_COMPLETE) {
+            if (message.getDataType() == Message.TEXT) {
 //            for (int i = 0; i < 100; i++)
 //            {
 //                Message testMsg = new Message(Integer.toString(i), message.getContactId(), message.getType(), message.getDataType(), i);
@@ -170,25 +171,33 @@ public class BluetoothService extends Service {
 //                TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
 //                Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
 //            }
-            Packet packet = new Packet(message);
-            TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-            Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-            return true;
-        } else if (message.getDataType() == Message.PICTURE) {
-            try {
-                ArrayList<Packet> packets = Packet.constructPackets(message);
-                for (Packet pkt : packets) {
-                    TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-                    Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                String test = "";
+                for (int i = 0; i < (Packet.PACKET_MAX_CONTENT_SIZE); i++) {
+                    test = test + "a";
                 }
-            } catch (IOException ex) {
-                Log.e(TAG, ex.getMessage());
-                return false;
+                Message msg = new Message(test, message.getContactId(), message.getType(), message.getDataType(), message.getMsgId());
+                Packet packet = new Packet(msg);
+                TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+                return true;
+            } else if (message.getDataType() == Message.PICTURE) {
+                try {
+                    ArrayList<Packet> packets = Packet.constructPackets(message);
+                    for (Packet pkt : packets) {
+                        TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                        Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
+                    }
+                } catch (IOException ex) {
+                    Log.e(TAG, ex.getMessage());
+                    return false;
+                }
+                return true;
             }
-            return true;
-        } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
+        }
+        if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
             Packet packet = new Packet(message);
             TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            return true;
         }
         return false;
     }

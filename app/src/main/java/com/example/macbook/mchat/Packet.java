@@ -131,7 +131,7 @@ public class Packet {
     public void setContent(byte[] content) {
         this.content = content;
         this.length = (byte)content.length;
-        if (this.length > PACKET_MAX_CONTENT_SIZE) {
+        if (content.length > PACKET_MAX_CONTENT_SIZE) {
             Log.e("TAG", "Content length is too large");
         }
     }
