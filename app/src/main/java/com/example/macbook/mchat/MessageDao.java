@@ -25,6 +25,6 @@ public interface MessageDao {
     @Insert
     void insert(Message msg);
 
-    @Query ("UPDATE Messages SET status=:status WHERE contact_id ==:id AND msg_id ==:msgId")
-    void updateStatus(String id, int msgId, int status);
+    @Query ("UPDATE Messages SET status=:status WHERE contact_id ==:id AND msg_id ==:msgId AND type ==:type")
+    void updateStatus(String id, int msgId, int status, int type);
 }

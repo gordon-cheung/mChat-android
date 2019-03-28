@@ -373,7 +373,7 @@ public class BluetoothService extends Service {
             @Override
             public void run() {
                 Log.d(TAG, "Updating message to status: " + status);
-                AppDatabase.getInstance().messageDao().updateStatus(msg.getContactId(), msg.getMsgId(), status);
+                AppDatabase.getInstance().messageDao().updateStatus(msg.getContactId(), msg.getMsgId(), status, Message.IS_SEND);
             }
         });
     }
