@@ -57,6 +57,9 @@ public class Message implements Serializable {
     @ColumnInfo(name = "msg_id")
     private int msgId;
 
+    @ColumnInfo(name = "msg_ack_id")
+    private int msgAckId;
+
     @ColumnInfo(name = "body")
     private String body;
 
@@ -64,7 +67,6 @@ public class Message implements Serializable {
     private long timestamp;
 
     // TODO add read and unread column
-
     public Message() {}
 
     public Message(String msgBody, String contact, final int msgType, final int dType, final long time) {
@@ -75,6 +77,7 @@ public class Message implements Serializable {
         timestamp = time;
         status = STATUS_PENDING;
         msgId = 0;
+        msgAckId = -1;
     }
     public Message(String msgBody, String contact, final int msgType, final int dType, final int messageId) {
         body = msgBody;
@@ -84,6 +87,7 @@ public class Message implements Serializable {
         timestamp = System.currentTimeMillis();
         status = STATUS_PENDING;
         msgId = messageId;
+        msgAckId = -1;
     }
 
     public Message(String msgBody, String contact, final int msgType, final int dType, final long time, final int stat) {
@@ -93,6 +97,7 @@ public class Message implements Serializable {
         dataType = dType;
         timestamp = time;
         status = stat;
+        msgAckId = -1;
     }
 
     public Message(Packet packet, int messageType, int msgStatus) {
@@ -103,6 +108,7 @@ public class Message implements Serializable {
         type = messageType;
         status = msgStatus;
         msgId = packet.getMsgId();
+        msgAckId = -1;
     }
 
     public int getId() {
@@ -124,6 +130,8 @@ public class Message implements Serializable {
     public int getStatus() { return status; }
 
     public int getMsgId() { return msgId; }
+
+    public int getMsgAckId() { return msgAckId; }
 
     public void setId(int id) {
         this.id = id;
@@ -147,6 +155,8 @@ public class Message implements Serializable {
 
     public void setMsgId(int messsageId) { this.msgId = messsageId; }
 
+    public void setMsgAckId(int ackId) { this.msgAckId = ackId; }
+
     public void printMessage() {
         System.out.println("ContactId: " + contactId);
         System.out.println("Type: " + type);
@@ -154,5 +164,15 @@ public class Message implements Serializable {
         System.out.println("Body: " + body);
         System.out.println("Timestamp: " + timestamp);
         System.out.println("MessageId: " + msgId);
+        System.out.println("MessageAckId: " + msgId);
+    }
+
+    public Message deepClone()  {
+        Message msg = new Message(this.body, this.contactId, this.type, this.dataType, this.msgId);
+        msg.setTimestamp(this.timestamp);
+        msg.setStatus(this.status);
+        msg.setMsgAckId(this.msgAckId);
+
+        return msg;
     }
 }

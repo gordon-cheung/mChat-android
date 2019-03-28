@@ -85,6 +85,7 @@ public abstract class MChatActivity extends AppCompatActivity {
     private static IntentFilter appNotificationIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+        intentFilter.addAction(AppNotification.ACK_RECEIVED_NOTIFICATION);
         intentFilter.addAction(AppNotification.ACTION_GATT_CONNECTED);
         intentFilter.addAction(AppNotification.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(AppNotification.ACTION_GATT_SERVICES_DISCOVERED);

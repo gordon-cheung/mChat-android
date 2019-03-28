@@ -156,7 +156,8 @@ public class Packet {
     }
 
     // TODO Handle the case where image is only 1 packet
-    public static ArrayList<Packet> encodeImage(Message msg, byte[] image) {
+    public static ArrayList<Packet> encodeImage(Message message, byte[] image) {
+        Message msg = message.deepClone();
         ArrayList<Packet> packets = new ArrayList<>();
         int size = image.length;
         int count = msg.getMsgId();
