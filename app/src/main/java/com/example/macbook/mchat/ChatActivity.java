@@ -3,8 +3,6 @@ package com.example.macbook.mchat;
 import android.Manifest;
 import android.content.*;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -20,10 +18,6 @@ import android.util.Log;
 import android.view.Display;
 import android.widget.*;
 import android.view.View;
-
-import java.io.*;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,7 +134,8 @@ public class ChatActivity extends MChatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 2);
+                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 4);
+                updateMessage.setMsgAckId(-1);
                 Intent intent = new Intent(AppNotification.ACK_RECEIVED_NOTIFICATION);
                 intent.putExtra(AppNotification.ACK_RECEIVED_NOTIFICATION, updateMessage);
                 sendBroadcast(intent);
@@ -206,21 +201,23 @@ public class ChatActivity extends MChatActivity {
         mRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
 
         // Store message in database
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-            Log.d(TAG, "Inserting stored sent message");
-            AppDatabase.getInstance().messageDao().insert(msg);
-            }
-        });
+
 
         // TODO handle messages failed to send
-        if (mBluetoothService.send(msg)) {
-            Log.d(TAG, "Message successfully sent");
+        int msgAckId = mBluetoothService.send(msg);
+        if (msgAckId != -1) {
+            msg.setMsgAckId(msgAckId);
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "Inserting stored sent message");
+                    AppDatabase.getInstance().messageDao().insert(msg);
+                }
+            });
+            return true;
         } else {
-            Log.e(TAG, "Message failed to send");
+            return false;
         }
-        return true;
     }
 
     private boolean receiveMessage(final Message msg) {

@@ -161,12 +161,12 @@ public class BluetoothService extends Service {
         }
     }
 
-    public boolean send(Message message) {
+    public int send(final Message message) {
         if (message.getDataType() == Message.TEXT) {
             Packet packet = new Packet(message);
             TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
             Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
-            return true;
+            return message.getMsgId();
         } else if (message.getDataType() == Message.PICTURE) {
             try {
                 ArrayList<Packet> packets = Packet.constructPackets(message);
@@ -174,16 +174,17 @@ public class BluetoothService extends Service {
                     TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                     Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
                 }
+                return packets.get(packets.size() - 1).getMsgId();
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
-                return false;
+                return -1;
             }
-            return true;
         } else if (message.getDataType() == Message.STATE_INIT) { //Don't queue as we don't expect an ACK for non-data messages
             Packet packet = new Packet(message);
             TransmissionManager.writeCharacteristic(packet.getBytes(), nordicUARTGattCharacteristicTX, mBluetoothGatt);
+            return -1;
         }
-        return false;
+        return -1;
     }
 
     public void receive(byte[] data) {
