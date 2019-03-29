@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-// TODO refactor and clean up class
 public class BluetoothService extends Service {
     private final static String TAG = BluetoothService.class.getSimpleName();
 
@@ -190,10 +189,6 @@ public class BluetoothService extends Service {
                 try {
 
                     ArrayList<Packet> packets = Packet.constructPackets(message);
-                    // TODO remove
-                    Log.d(TAG, "SENDING PICTURE MESSAGE OF SIZE: " + packets.size());
-                    Log.d(TAG, "PICTURE START MESSAGE ID: " + packets.get(0).getMsgId());
-                    Log.d(TAG, "PICTURE END MESSAGE ID: " + packets.get(packets.size()-1).getMsgId());
                     for (Packet pkt : packets) {
                         TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                         Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
@@ -230,17 +225,6 @@ public class BluetoothService extends Service {
             case Message.PICTURE:
                 // store packet
                 storeImagePacket(packet);
-
-                // TODO remove
-                Log.d(TAG, "Packets in currently in buffer");
-                for (Packet p : imageBuffer) {
-                    String dataType = ByteUtilities.getByteInHexString(p.getDataType());
-                    String msgId = String.valueOf(p.getMsgId());
-                    String content = ByteUtilities.getByteArrayInHexString(p.getContent());
-
-                    String debugMessage = ("DataType: " + dataType + " msgId: " + msgId + " content: " + content);
-                    Log.d(TAG, debugMessage);
-                }
 
                 // Detect if a full image was received
                 ArrayList<Packet> img = detectImageReceived();
@@ -368,7 +352,6 @@ public class BluetoothService extends Service {
         }
     }
 
-    // TODO testing png and jpg
     public String saveImage(Bitmap bitmap, Message msg) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);

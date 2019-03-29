@@ -118,50 +118,50 @@ public class ChatActivity extends MChatActivity {
         chatEditText.addTextChangedListener(textWatcher);
 
         // TODO: REMOVE
-        final Button testButton = findViewById(R.id.button_chatbox_test);
-        testButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG, "TEST BUTTON CLICKED");
-
-                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 641);
-                updateMessage.setMsgAckId(-1);
-                Intent intent = new Intent(AppNotification.ACK_RECEIVED_NOTIFICATION);
-                intent.putExtra(AppNotification.ACK_RECEIVED_NOTIFICATION, updateMessage);
-                sendBroadcast(intent);
-
-//                try {
-//                    BluetoothService bs = new BluetoothService();
-//                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
-//                    int size = bitmap.getByteCount();
-//                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 10, os);
-//                    int compressedSize = os.toByteArray().length;
+//        final Button testButton = findViewById(R.id.button_chatbox_test);
+//        testButton.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                Log.d(TAG, "TEST BUTTON CLICKED");
 //
-//                    Message message = new Message("Some Image", "4038092883", Message.IS_SEND, Message.PICTURE, 0);
-//                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
-//                    os.close();
-//                    for (Packet p : sentImagePackets) {
-//                        bs.storeImagePacket(p);
-//                        ArrayList<Packet> image = bs.detectImageReceived();
-//                        if (image != null) {
-//                            System.out.println("Image detected");
-//                            Bitmap receivedImageBitmap = bs.constructImage(image);
-//                            Message receiveMessage = new Message(p, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
-//                            String url = bs.saveImage(bitmap, receiveMessage);
+//                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 641);
+//                updateMessage.setMsgAckId(-1);
+//                Intent intent = new Intent(AppNotification.ACK_RECEIVED_NOTIFICATION);
+//                intent.putExtra(AppNotification.ACK_RECEIVED_NOTIFICATION, updateMessage);
+//                sendBroadcast(intent);
 //
-//                            receiveMessage.setDataType(Message.PICTURE);
-//                            receiveMessage.setBody(url);
-//
-//                            final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
-//                            intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, receiveMessage);
-//                            sendBroadcast(intent);
-//                        }
-//                    }
-//                } catch(IOException ex) {
-//
-//                }
-            }
-        });
+////                try {
+////                    BluetoothService bs = new BluetoothService();
+////                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test_image1);
+////                    int size = bitmap.getByteCount();
+////                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+////                    bitmap.compress(Bitmap.CompressFormat.JPEG, 10, os);
+////                    int compressedSize = os.toByteArray().length;
+////
+////                    Message message = new Message("Some Image", "4038092883", Message.IS_SEND, Message.PICTURE, 0);
+////                    ArrayList<Packet> sentImagePackets = Packet.encodeImage(message, os.toByteArray());
+////                    os.close();
+////                    for (Packet p : sentImagePackets) {
+////                        bs.storeImagePacket(p);
+////                        ArrayList<Packet> image = bs.detectImageReceived();
+////                        if (image != null) {
+////                            System.out.println("Image detected");
+////                            Bitmap receivedImageBitmap = bs.constructImage(image);
+////                            Message receiveMessage = new Message(p, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
+////                            String url = bs.saveImage(bitmap, receiveMessage);
+////
+////                            receiveMessage.setDataType(Message.PICTURE);
+////                            receiveMessage.setBody(url);
+////
+////                            final Intent intent = new Intent(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+////                            intent.putExtra(AppNotification.MESSAGE_RECEIVED_NOTIFICATION, receiveMessage);
+////                            sendBroadcast(intent);
+////                        }
+////                    }
+////                } catch(IOException ex) {
+////
+////                }
+//            }
+//        });
     }
 
     private void clearImages() {
