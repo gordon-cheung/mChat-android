@@ -174,7 +174,12 @@ public class BluetoothService extends Service {
                 return message.getMsgId();
             } else if (message.getDataType() == Message.PICTURE) {
                 try {
+
                     ArrayList<Packet> packets = Packet.constructPackets(message);
+                    // TODO remove
+                    Log.d(TAG, "SENDING PICTURE MESSAGE OF SIZE: " + packets.size());
+                    Log.d(TAG, "PICTURE START MESSAGE ID: " + packets.get(0).getMsgId());
+                    Log.d(TAG, "PICTURE END MESSAGE ID: " + packets.get(packets.size()-1).getMsgId());
                     for (Packet pkt : packets) {
                         TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                         Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
@@ -211,6 +216,17 @@ public class BluetoothService extends Service {
             case Message.PICTURE: //TODO
                 // store packet
                 storeImagePacket(packet);
+
+                // TODO remove
+                Log.d(TAG, "Packets in currently in buffer");
+                for (Packet p : imageBuffer) {
+                    String dataType = ByteUtilities.getByteInHexString(p.getDataType());
+                    String msgId = String.valueOf(p.getMsgId());
+                    String content = ByteUtilities.getByteArrayInHexString(p.getContent());
+
+                    String debugMessage = ("DataType: " + dataType + " msgId: " + msgId + " content: " + content);
+                    Log.d(TAG, debugMessage);
+                }
 
                 // Detect if a full image was received
                 ArrayList<Packet> img = detectImageReceived();
@@ -268,6 +284,9 @@ public class BluetoothService extends Service {
         for (int i = 0 ; i <= imageBuffer.size(); i++) {
             if (i == imageBuffer.size()) {
                 imageBuffer.add(pkt);
+                break;
+            }
+            else if (imageBuffer.get(i).getMsgId() == pkt.getMsgId()) {
                 break;
             }
             else if (imageBuffer.get(i).getMsgId() > pkt.getMsgId()) {
