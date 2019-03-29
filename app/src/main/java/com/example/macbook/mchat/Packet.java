@@ -137,8 +137,10 @@ public class Packet {
                 Uri imageUri = Uri.fromFile(new File(msg.getBody()));
                 Bitmap image = MediaStore.Images.Media.getBitmap(MChatApplication.getAppContext().getContentResolver(), imageUri);
 
+                Log.d(TAG, "Original Image Size: " + image.getByteCount());
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 image.compress(Bitmap.CompressFormat.JPEG, 10, os);
+                Log.d(TAG, "Compressed Image Size: " + os.toByteArray().length);
                 packets.addAll(encodeImage(msg, os.toByteArray()));
             } catch (IOException ex) {
                 Log.e(TAG, ex.getMessage());
