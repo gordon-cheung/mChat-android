@@ -19,10 +19,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import de.hdodenhof.circleimageview.CircleImageView;
-
 import java.util.ArrayList;
 
-// TODO Add Scan Button and Clean up Activity
 public class SelectDeviceActivity extends MChatActivity {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
     private ArrayList<String> mDeviceAddresses = new ArrayList<String>();
@@ -126,7 +124,7 @@ public class SelectDeviceActivity extends MChatActivity {
     }
 
     private void scan() {
-        //if (isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+        if (isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             Log.d(TAG, "Starting scan");
             isScanning = true;
             mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -143,10 +141,10 @@ public class SelectDeviceActivity extends MChatActivity {
                     }
                 }
             }, 10000);
-//        }
-//        else {
-//            getPermissions();
-//        }
+        }
+        else {
+            getPermissions();
+        }
     }
 
     private void stopScan() {
@@ -155,7 +153,7 @@ public class SelectDeviceActivity extends MChatActivity {
         mBluetoothScanner.stopScan(scanCallback);
         updateScanMenuItem();
     }
-//
+
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanFailed(int errorCode) {

@@ -45,10 +45,8 @@ public class ChatAdapter extends RecyclerView.Adapter {
         for (int i = 0; i < mMessageList.size(); i++) {
             Message msg = mMessageList.get(i);
             if (msg.getMsgAckId() == updateMessage.getMsgId()) {
-                if (updateMessage.getDataType() == Message.SENT) {
-                    msg.setStatus(Message.STATUS_SENT);
-                    return i;
-                }
+                msg.setStatus(Message.STATUS_SENT);
+                return i;
             }
         }
 

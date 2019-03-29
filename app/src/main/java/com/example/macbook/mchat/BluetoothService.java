@@ -71,6 +71,7 @@ public class BluetoothService extends Service {
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcast(AppNotification.ACTION_GATT_DISCONNECTED);
                 mConnectionState = STATE_DISCONNECTED;
+                NETWORK_REGISTRATION_COMPLETE = false;
             }
         }
 
@@ -174,7 +175,12 @@ public class BluetoothService extends Service {
                 return message.getMsgId();
             } else if (message.getDataType() == Message.PICTURE) {
                 try {
+
                     ArrayList<Packet> packets = Packet.constructPackets(message);
+                    // TODO remove
+                    Log.d(TAG, "SENDING PICTURE MESSAGE OF SIZE: " + packets.size());
+                    Log.d(TAG, "PICTURE START MESSAGE ID: " + packets.get(0).getMsgId());
+                    Log.d(TAG, "PICTURE END MESSAGE ID: " + packets.get(packets.size()-1).getMsgId());
                     for (Packet pkt : packets) {
                         TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                         Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
@@ -208,9 +214,20 @@ public class BluetoothService extends Service {
                 break;
             case Message.PICTURE_START:
             case Message.PICTURE_END:
-            case Message.PICTURE: //TODO
+            case Message.PICTURE:
                 // store packet
                 storeImagePacket(packet);
+
+                // TODO remove
+                Log.d(TAG, "Packets in currently in buffer");
+                for (Packet p : imageBuffer) {
+                    String dataType = ByteUtilities.getByteInHexString(p.getDataType());
+                    String msgId = String.valueOf(p.getMsgId());
+                    String content = ByteUtilities.getByteArrayInHexString(p.getContent());
+
+                    String debugMessage = ("DataType: " + dataType + " msgId: " + msgId + " content: " + content);
+                    Log.d(TAG, debugMessage);
+                }
 
                 // Detect if a full image was received
                 ArrayList<Packet> img = detectImageReceived();
@@ -241,6 +258,7 @@ public class BluetoothService extends Service {
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
+                broadcast(AppNotification.NETWORK_REGISTRATION_NOTIFICATION);
                 Log.d(TAG, "MLINK startup complete");
                 break;
             case Message.ACK:
@@ -248,10 +266,13 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
-                TransmissionManager.txSuccess();
-                updateMessageStatus(msg, Message.STATUS_SENT);
-                broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
-                Log.d(TAG, "TX success notification");
+                Packet sentPacket = TransmissionManager.txSuccess();
+                if (packet != null) {
+                    Message sentMessage = new Message(sentPacket, Message.IS_SEND, Message.STATUS_SENT);
+                    updateMessageStatus(sentMessage, Message.STATUS_SENT);
+                    broadcastMsg(sentMessage, AppNotification.ACK_RECEIVED_NOTIFICATION);
+                    Log.d(TAG, "TX success notification");
+                }
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);
@@ -268,6 +289,9 @@ public class BluetoothService extends Service {
         for (int i = 0 ; i <= imageBuffer.size(); i++) {
             if (i == imageBuffer.size()) {
                 imageBuffer.add(pkt);
+                break;
+            }
+            else if (imageBuffer.get(i).getMsgId() == pkt.getMsgId()) {
                 break;
             }
             else if (imageBuffer.get(i).getMsgId() > pkt.getMsgId()) {

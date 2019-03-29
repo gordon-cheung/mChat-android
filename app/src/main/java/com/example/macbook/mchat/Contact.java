@@ -1,11 +1,8 @@
 package com.example.macbook.mchat;
 
-import android.util.Log;
-
 import java.io.Serializable;
 
 public class Contact implements Serializable {
-    private String TAG = Contact.class.getSimpleName();
     private String name;
     private String phoneNumber;
     private String image;
