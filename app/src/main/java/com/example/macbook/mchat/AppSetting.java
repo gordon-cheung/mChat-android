@@ -6,9 +6,7 @@ import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
 @Entity(tableName = "app_settings")
-public class AppSetting  {
-    private static String TAG = AppSetting.class.getSimpleName();
-
+public class AppSetting {
     @NonNull
     @PrimaryKey
     private String name;

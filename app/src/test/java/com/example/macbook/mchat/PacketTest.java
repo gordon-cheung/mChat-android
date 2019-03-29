@@ -1,54 +1,11 @@
 package com.example.macbook.mchat;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
-
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PacketTest {
-    @Test
-    public void messageToPacketTest() {
-        Message msg = new Message("I am going to see coffee girl", "555-555-5555", Message.IS_SEND,Message.TEXT, 0);
-        Packet packet = new Packet(msg);
-        packet.printPacket();
-    }
-
-    @Test
-    public void bytesToPacketTest() {
-        String content = "Say Hello to My Little Friend";
-        int currentTime = (int) (System.currentTimeMillis() / 1000);
-        String phoneNumber = "5555555555";
-
-        byte[] address = phoneNumber.getBytes();
-        byte[] dataType = new byte[] {0x01};
-        byte[] msgId = new byte[] {0x00, 0x01};
-        byte[] timestampByte = ByteBuffer.allocate(4).putInt(currentTime).array();
-        byte[] contentByte = content.getBytes();
-
-        int size = contentByte.length;
-        byte[] sizeByte = new byte[] {(byte)size};
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            outputStream.write(sizeByte);
-            outputStream.write(address);
-            outputStream.write(dataType);
-            outputStream.write(msgId);
-            outputStream.write(timestampByte);
-            outputStream.write(contentByte);
-        } catch(Exception ex) {
-
-        }
-
-        Packet packet = new Packet(outputStream.toByteArray());
-        packet.printPacket();
-    }
-
     @Test
     public void PictureMessageToPacketsTest() {
         Message msg = new Message("/storage/emulated/0/DCIM/Camera/20190318_224056.jpg", "5551234567", Message.IS_SEND, Message.PICTURE, 0);
@@ -82,5 +39,36 @@ public class PacketTest {
 
         boolean result = Arrays.equals(finalArr, arr);
         System.out.println(result ? "Matches" : "Does not match");
+    }
+
+    @Test
+    public void MessageToMessageTest() {
+        Message msg = new Message();
+        msg.setStatus(Message.STATUS_PENDING);
+        msg.setBody("Hellos");
+        msg.setType(Message.IS_SEND);
+        msg.setDataType(Message.TEXT);
+        msg.setTimestamp(System.currentTimeMillis());
+        msg.setContactId("5878880963");
+        msg.setMsgId(1);
+        msg.setMsgAckId(1);
+
+        System.out.println("\nSent Message");
+        msg.printMessage();
+
+        Packet packet = new Packet(msg);
+        System.out.println("\nSent Packet");
+        packet.printPacket();
+
+        byte[] bytes = packet.getBytes();
+
+        Packet receivedPacket = new Packet(bytes);
+        System.out.println("\nReceived Packet");
+        receivedPacket.printPacket();
+
+        Message receivedMessage = new Message(receivedPacket, Message.IS_RECEIVE, Message.STATUS_RECEIVED);
+        System.out.println("\nReceived Message");
+        receivedMessage.printMessage();
+
     }
 }

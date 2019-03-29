@@ -123,7 +123,7 @@ public class ChatActivity extends MChatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "TEST BUTTON CLICKED");
 
-                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 4);
+                Message updateMessage = new Message("", "5878880963", Message.IS_SEND, Message.SENT, 641);
                 updateMessage.setMsgAckId(-1);
                 Intent intent = new Intent(AppNotification.ACK_RECEIVED_NOTIFICATION);
                 intent.putExtra(AppNotification.ACK_RECEIVED_NOTIFICATION, updateMessage);

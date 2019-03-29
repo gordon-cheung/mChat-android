@@ -13,7 +13,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract MessageDao messageDao();
     public abstract AppSettingDao appSettingDao();
 
-    // TODO add logging whenever a database action is performed
     public static AppDatabase getInstance() {
         if (sInstance == null) {
             sInstance = getInstance(MChatApplication.getAppContext());

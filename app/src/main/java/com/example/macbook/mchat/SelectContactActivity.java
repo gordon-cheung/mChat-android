@@ -16,7 +16,6 @@ public class SelectContactActivity extends MChatActivity {
 
     private static final String TAG = SelectContactActivity.class.getSimpleName();
     private ArrayList<Contact> mContacts = new ArrayList<>();
-    // TODO implement a better way to do this such as LINQ?
     private ArrayList<String> mPhoneNumbers = new ArrayList<>();
 
     @Override

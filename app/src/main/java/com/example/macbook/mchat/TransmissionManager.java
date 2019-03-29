@@ -54,15 +54,17 @@ public class TransmissionManager {
         }
     }
 
-    public static void txSuccess(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+    public static Packet txSuccess(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
+            return null;
         }
         else {
             Log.d(TAG, "TX SUCCESS, removing msgId removing msgId from sending q, msgId: " + m_SendingQueue.peek().getMsgId());
-            m_SendingQueue.remove();
+            Packet packet = m_SendingQueue.remove();
             waitingTX = false;
             write(characteristic, gatt);
+            return packet;
         }
     }
 
