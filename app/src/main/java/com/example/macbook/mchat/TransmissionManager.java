@@ -56,13 +56,14 @@ public class TransmissionManager {
         }
     }
 
-    public static void txSuccess() {
+    public static Packet txSuccess() {
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
+            return null;
         }
         else {
             Log.d(TAG, "TX SUCCESS, removing msgId from sending q: " + new String(m_SendingQueue.peek().getContent()));
-            m_SendingQueue.remove();
+            return m_SendingQueue.remove();
         }
     }
 

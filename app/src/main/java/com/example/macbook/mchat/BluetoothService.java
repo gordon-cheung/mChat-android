@@ -266,10 +266,13 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
-                TransmissionManager.txSuccess();
-                updateMessageStatus(msg, Message.STATUS_SENT);
-                broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
-                Log.d(TAG, "TX success notification");
+                Packet sentPacket = TransmissionManager.txSuccess();
+                if (packet != null) {
+                    Message sentMessage = new Message(sentPacket, Message.IS_SEND, Message.STATUS_SENT);
+                    updateMessageStatus(sentMessage, Message.STATUS_SENT);
+                    broadcastMsg(sentMessage, AppNotification.ACK_RECEIVED_NOTIFICATION);
+                    Log.d(TAG, "TX success notification");
+                }
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);

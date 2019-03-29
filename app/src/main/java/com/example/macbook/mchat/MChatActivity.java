@@ -80,7 +80,6 @@ public abstract class MChatActivity extends AppCompatActivity {
             }
             else if (action == AppNotification.NETWORK_REGISTRATION_NOTIFICATION) {
                 Toast.makeText(context, "Connected to the base", Toast.LENGTH_SHORT).show();
-                updateConnectionState(BluetoothService.STATE_CONNECTING);
             }
             onAppNotificationReceived(intent);
         }
