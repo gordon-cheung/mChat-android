@@ -78,6 +78,10 @@ public abstract class MChatActivity extends AppCompatActivity {
                 Toast.makeText(context, "Connecting to " + mBluetoothService.getDeviceAddress(), Toast.LENGTH_SHORT).show();
                 updateConnectionState(BluetoothService.STATE_CONNECTING);
             }
+            else if (action == AppNotification.NETWORK_REGISTRATION_NOTIFICATION) {
+                Toast.makeText(context, "Connected to the base", Toast.LENGTH_SHORT).show();
+                updateConnectionState(BluetoothService.STATE_CONNECTING);
+            }
             onAppNotificationReceived(intent);
         }
     };
@@ -86,6 +90,7 @@ public abstract class MChatActivity extends AppCompatActivity {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
         intentFilter.addAction(AppNotification.ACK_RECEIVED_NOTIFICATION);
+        intentFilter.addAction(AppNotification.NETWORK_REGISTRATION_NOTIFICATION);
         intentFilter.addAction(AppNotification.ACTION_GATT_CONNECTED);
         intentFilter.addAction(AppNotification.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(AppNotification.ACTION_GATT_SERVICES_DISCOVERED);

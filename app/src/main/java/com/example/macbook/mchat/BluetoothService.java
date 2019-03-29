@@ -71,6 +71,7 @@ public class BluetoothService extends Service {
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcast(AppNotification.ACTION_GATT_DISCONNECTED);
                 mConnectionState = STATE_DISCONNECTED;
+                NETWORK_REGISTRATION_COMPLETE = false;
             }
         }
 
@@ -257,6 +258,7 @@ public class BluetoothService extends Service {
                 break;
             case Message.STARTUP_COMPLETE:
                 NETWORK_REGISTRATION_COMPLETE = true;
+                broadcast(AppNotification.NETWORK_REGISTRATION_NOTIFICATION);
                 Log.d(TAG, "MLINK startup complete");
                 break;
             case Message.ACK:
