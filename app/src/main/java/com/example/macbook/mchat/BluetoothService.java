@@ -168,9 +168,22 @@ public class BluetoothService extends Service {
     public int send(final Message message) {
         if (isConnected()) {
             if (message.getDataType() == Message.TEXT) {
-                Packet packet = new Packet(message);
-                TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-                Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(packet.getBytes()));
+//                String content = "";
+//                for (int i = 0; i < Packet.PACKET_MAX_CONTENT_SIZE - 4; i++)
+//                {
+//                    content = content + "a";
+//                }
+//                content = "  " + content;
+//                for (int i = 0; i < 100; i ++)
+//                {
+//                    Message msg = new Message((Integer.toString(i) + content), message.getContactId(), message.getType(), message.getDataType(), i);
+//                    Packet packet = new Packet(msg);
+//                    TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+//                    Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId());
+//                }
+                    Packet packet = new Packet(message);
+                    TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
+                    Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId());
                 return message.getMsgId();
             } else if (message.getDataType() == Message.PICTURE) {
                 try {
@@ -236,7 +249,7 @@ public class BluetoothService extends Service {
                 break;
             case Message.BUFFER_FULL:
             case Message.TIMEOUT:
-                TransmissionManager.txFailure();
+                TransmissionManager.txFailure(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 Log.d(TAG, "Buffer full or timeout");
                 break;
             case Message.STARTUP_COMPLETE:
@@ -248,14 +261,14 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "ACK received");
                 break;
             case Message.SENT:
-                TransmissionManager.txSuccess();
+                TransmissionManager.txSuccess(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 updateMessageStatus(msg, Message.STATUS_SENT);
                 broadcastMsg(msg, AppNotification.ACK_RECEIVED_NOTIFICATION);
                 Log.d(TAG, "TX success notification");
                 break;
             case Message.ERROR:
                 updateMessageStatus(msg, Message.STATUS_FAILED);
-                TransmissionManager.txFailure();
+                TransmissionManager.txFailure(nordicUARTGattCharacteristicTX, mBluetoothGatt);
                 broadcastMsg(msg, AppNotification.MESSAGE_FAILED_NOTIFICATION);
                 Log.d(TAG, "TX error notification");
             default:

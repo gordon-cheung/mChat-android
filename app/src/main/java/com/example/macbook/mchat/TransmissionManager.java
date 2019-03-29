@@ -13,20 +13,20 @@ public class TransmissionManager {
     private static Queue<Packet> m_PendingQueue = new LinkedList<>();
     private static Queue<Packet> m_SendingQueue = new LinkedList<>();
     private final static String TAG = TransmissionManager.class.getSimpleName();
-    static volatile boolean waitingAck = false;
-    static Timer m_Timer = null;
+    static volatile boolean waitingTX = false;
+    static Timer m_TimeoutTimer = null;
 
     public static void queuedWrite(Packet packet, BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
-        Log.d(TAG, "Queued Write, msgId:" + new String(packet.getContent()));
+        Log.d(TAG, "Queued Write, msgId: " + packet.getMsgId());
         m_PendingQueue.add(packet);
         write(characteristic, gatt);
     }
 
     public static void ackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
-        Log.d(TAG, "ACK Received, removing msgId from pending q: " + new String(m_PendingQueue.peek().getContent()));
-        if (m_Timer != null)
-            m_Timer.cancel();
+        Log.d(TAG, "ACK Received, removing msgId from pending q, msgId: " + m_PendingQueue.peek().getMsgId());
+        if (m_TimeoutTimer != null)
+            m_TimeoutTimer.cancel();
         PacketTimer.TIMEOUT_INTERVAL = Math.max(PacketTimer.MIN_TIMEOUT_INTERVAL, (PacketTimer.TIMEOUT_INTERVAL / 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! ACK received but pending queue is empty!");
@@ -34,46 +34,48 @@ public class TransmissionManager {
         else {
             Packet packet = m_PendingQueue.remove();
             m_SendingQueue.add(packet);
-            waitingAck = false;
-            write(characteristic, gatt);
         }
     }
 
     public static void nackReceived(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
-        Log.d(TAG, "NACK Received, retrying msgId from pending q: " + new String(m_PendingQueue.peek().getContent()));
-        if (m_Timer != null)
-            m_Timer.cancel();
+        Log.d(TAG, "NACK Received, retrying msgId from pending q, msgId: " + m_PendingQueue.peek().getMsgId());
+        if (m_TimeoutTimer != null)
+            m_TimeoutTimer.cancel();
         PacketTimer.TIMEOUT_INTERVAL = Math.min(PacketTimer.MAX_TIMEOUT_INTERVAL, (PacketTimer.TIMEOUT_INTERVAL * 2));
         if (m_PendingQueue.size() == 0) {
             Log.d(TAG, "Error! NACK received but pending queue is empty!");
         }
         else {
-//            waitingAck = false;
-//            write(characteristic, gatt);
+            //waitingTX = false;
+            //write(characteristic, gatt);
             PacketTimer task = new PacketTimer(characteristic, gatt);
-            m_Timer = new Timer(true);
-            m_Timer.schedule(task, PacketTimer.TIMEOUT_INTERVAL);
+            m_TimeoutTimer = new Timer(true);
+            m_TimeoutTimer.schedule(task, PacketTimer.TIMEOUT_INTERVAL);
         }
     }
 
-    public static void txSuccess() {
+    public static void txSuccess(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
         else {
-            Log.d(TAG, "TX SUCCESS, removing msgId from sending q: " + new String(m_SendingQueue.peek().getContent()));
+            Log.d(TAG, "TX SUCCESS, removing msgId removing msgId from sending q, msgId: " + m_SendingQueue.peek().getMsgId());
             m_SendingQueue.remove();
+            waitingTX = false;
+            write(characteristic, gatt);
         }
     }
 
-    public static void txFailure() {
-        Log.d(TAG, "TX FAILURE, removing msgId from sending q: " + new String(m_SendingQueue.peek().getContent()));
+    public static void txFailure(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt) {
+        Log.d(TAG, "TX FAILURE, removing msgId from sending q, msgId: " + m_SendingQueue.peek().getMsgId());
         if (m_SendingQueue.size() == 0) {
             Log.d(TAG, "Error! TX received but sending queue is empty!");
         }
         else {
             Packet packet = m_SendingQueue.remove();
             m_PendingQueue.add(packet);
+            waitingTX = false;
+            write(characteristic, gatt);
         }
     }
 
@@ -96,17 +98,17 @@ public class TransmissionManager {
 
     static void write(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
     {
-        if ((waitingAck == false) && (m_PendingQueue.size() > 0))
+        if ((waitingTX == false) && (m_PendingQueue.size() > 0))
         {
-            waitingAck = true;
+            waitingTX = true;
             writeCharacteristic(m_PendingQueue.peek().getBytes(), characteristic, gatt);
             PacketTimer task = new PacketTimer(characteristic, gatt);
-            if (m_Timer != null)
+            if (m_TimeoutTimer != null)
             {
-                m_Timer.cancel();
+                m_TimeoutTimer.cancel();
             }
-            m_Timer = new Timer(true);
-            m_Timer.schedule(task, PacketTimer.TIMEOUT_INTERVAL);
+            m_TimeoutTimer = new Timer(true);
+            m_TimeoutTimer.schedule(task, PacketTimer.TIMEOUT_INTERVAL);
         }
     }
 }

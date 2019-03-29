@@ -11,8 +11,8 @@ public class PacketTimer extends TimerTask {
     private BluetoothGattCharacteristic m_BluetoothCharacteristic;
     private BluetoothGatt m_BluetoothGatt;
     private final static String TAG = PacketTimer.class.getSimpleName();
-    static int TIMEOUT_INTERVAL = 2000;
-    final static int MIN_TIMEOUT_INTERVAL = 2000;
+    static int TIMEOUT_INTERVAL = 5000;
+    final static int MIN_TIMEOUT_INTERVAL = 5000;
     final static int MAX_TIMEOUT_INTERVAL = 60000;
 
     public PacketTimer(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt)
@@ -24,7 +24,7 @@ public class PacketTimer extends TimerTask {
     @Override
     public void run() {
         Log.d(TAG, "Timeout Occured!");
-        TransmissionManager.waitingAck = false;
+        TransmissionManager.waitingTX = false;
         TransmissionManager.write(m_BluetoothCharacteristic, m_BluetoothGatt);
     }
 }
