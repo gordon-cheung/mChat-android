@@ -2,7 +2,6 @@ package com.example.macbook.mchat;
 
 public final class ByteUtilities {
     private ByteUtilities() {};
-    private final static String TAG = ByteUtilities.class.getSimpleName();
 
     public static String getByteArrayInHexString(byte[] arr) {
         StringBuilder sb = new StringBuilder();

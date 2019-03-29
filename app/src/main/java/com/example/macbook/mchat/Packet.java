@@ -1,20 +1,15 @@
 package com.example.macbook.mchat;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.ImageView;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 
 public class Packet {
     private static final String TAG = SelectDeviceActivity.class.getSimpleName();
@@ -32,7 +27,6 @@ public class Packet {
 
     private static final int PACKET_MAX_SIZE = 244;
     public static final int PACKET_MAX_CONTENT_SIZE = PACKET_MAX_SIZE - PACKET_HEADER_LENGTH;
-
 
     private byte length;
     private byte[] address;

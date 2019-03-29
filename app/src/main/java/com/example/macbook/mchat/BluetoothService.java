@@ -214,7 +214,7 @@ public class BluetoothService extends Service {
                 break;
             case Message.PICTURE_START:
             case Message.PICTURE_END:
-            case Message.PICTURE: //TODO
+            case Message.PICTURE:
                 // store packet
                 storeImagePacket(packet);
 
