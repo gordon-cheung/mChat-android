@@ -168,19 +168,6 @@ public class BluetoothService extends Service {
     public int send(final Message message) {
         if (isConnected()) {
             if (message.getDataType() == Message.TEXT) {
-//                String content = "";
-//                for (int i = 0; i < Packet.PACKET_MAX_CONTENT_SIZE - 4; i++)
-//                {
-//                    content = content + "a";
-//                }
-//                content = "  " + content;
-//                for (int i = 0; i < 100; i ++)
-//                {
-//                    Message msg = new Message((Integer.toString(i) + content), message.getContactId(), message.getType(), message.getDataType(), i);
-//                    Packet packet = new Packet(msg);
-//                    TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
-//                    Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId());
-//                }
                     Packet packet = new Packet(message);
                     TransmissionManager.queuedWrite(packet, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                     Log.d(TAG, "Queued text packet write to BLE, msgId: " + packet.getMsgId());
@@ -188,10 +175,6 @@ public class BluetoothService extends Service {
             } else if (message.getDataType() == Message.PICTURE) {
                 try {
                     ArrayList<Packet> packets = Packet.constructPackets(message);
-//                    // TODO remove
-//                    Log.d(TAG, "SENDING PICTURE MESSAGE OF SIZE: " + packets.size());
-//                    Log.d(TAG, "PICTURE START MESSAGE ID: " + packets.get(0).getMsgId());
-//                    Log.d(TAG, "PICTURE END MESSAGE ID: " + packets.get(packets.size()-1).getMsgId());
                     for (Packet pkt : packets) {
                         TransmissionManager.queuedWrite(pkt, nordicUARTGattCharacteristicTX, mBluetoothGatt);
                         Log.d(TAG, "Queuing picture packet write to BLE, msgId: " + pkt.getMsgId() + " content: " + ByteUtilities.getByteArrayInHexString(pkt.getBytes()));
@@ -221,7 +204,6 @@ public class BluetoothService extends Service {
         switch(type){
             case Message.TEXT:
                 saveMsg(msg);
-                broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
                 break;
             case Message.PICTURE_START:
             case Message.PICTURE_END:
@@ -231,17 +213,6 @@ public class BluetoothService extends Service {
 
                 // Detect if a full image was received
                 ArrayList<Packet> img = detectImageReceived();
-
-                // TODO remove
-//                Log.d(TAG, "Packets in currently in buffer");
-//                for (Packet p : imageBuffer) {
-//                    String dataType = ByteUtilities.getByteInHexString(p.getDataType());
-//                    String msgId = String.valueOf(p.getMsgId());
-//                    String content = ByteUtilities.getByteArrayInHexString(p.getContent());
-//
-//                    String debugMessage = ("DataType: " + dataType + " msgId: " + msgId + " content: " + content);
-//                    Log.d(TAG, debugMessage);
-//                }
 
                 if (img != null) {
                     Log.d(TAG, "Full image received");
@@ -254,7 +225,7 @@ public class BluetoothService extends Service {
                         msg.setBody(url);
 
                         saveMsg(msg);
-                        broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+//                        broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
                     }
                 }
                 break;
@@ -403,8 +374,12 @@ public class BluetoothService extends Service {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "Inserting stored received message");
-                AppDatabase.getInstance().messageDao().insert(msg);
+                List<Message> msgs = AppDatabase.getInstance().messageDao().getAll(msg.getContactId(), msg.getMsgId(), msg.getTimestamp(), msg.getType());
+                if (msgs.isEmpty()) {
+                    Log.d(TAG, "Inserting stored received message");
+                    AppDatabase.getInstance().messageDao().insert(msg);
+                    broadcastMsg(msg, AppNotification.MESSAGE_RECEIVED_NOTIFICATION);
+                }
             }
         });
     }

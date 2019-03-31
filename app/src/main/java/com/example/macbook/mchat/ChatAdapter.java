@@ -38,16 +38,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
     }
 
     public void addMessage(Message message) {
-        boolean isUnique = true;
-        for (Message m : mMessageList) {
-            if (m.getMsgId() == message.getMsgId()) {
-                isUnique = false;
-            }
-        }
-
-        if (isUnique) {
-            mMessageList.add(message);
-        }
+        mMessageList.add(message);
     }
 
     public int updateMessage(Message updateMessage) {
